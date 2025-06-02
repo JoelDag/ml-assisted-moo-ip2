@@ -1,32 +1,63 @@
 from input_archive import update_target_archive, archive_mapping
 from ml_training_module import training, progress
+from deap import base, creator, tools, algorithms
+import random
+
+class EvolutionaryAlgorithm:
+    def __init__(self, algo):
+        self.algo = algo
+        self.toolbox = base.Toolbox()
+
+        if algo not in ['NSGA2', 'NSGA3']:
+            raise ValueError("Unsupported algorithm. Choose 'NSGA2' or 'NSGA3'.")
+
+        self._setup_deap()
+
+    def _setup_deap(self):
+        # Erzeuge DEAP Typen
+        creator.create("FitnessMin", base.Fitness, weights=(-1.0,) * self.m)
+        creator.create("Individual", list, fitness=creator.FitnessMin)
+
+        # Register toolbox components
+        self.toolbox.register("attr_float", random.random)
+        self.toolbox.register("individual", tools.initRepeat, creator.Individual, self.toolbox.attr_float, n=self.n)
+        self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
+
+        self.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=10, low=0.0, up=1.0)
+        self.toolbox.register("mutate", tools.mutPolynomialBounded, eta=20, low=0.0, up=1.0, indpb=1/self.n)
+        if self.algo == 'NSGA2':
+            self.toolbox.register("select", tools.selNSGA2)
+        elif self.algo == 'NSGA3':
+            self.toolbox.register("select", tools.selNSGA3)
+        self.toolbox.register("evaluate", self.evaluate)
 
 
-def NSGA2(R, P_t, A_t, T_t1, x_l, x_u, t_past, t_freq, t, n):   
-    T_t = update_target_archive(P_t, T_t1, R)
-    count = t% t_freq
-    if count == 0:
-        D_t = archive_mapping(A_t, T_t, R)
-        predict, x_min, x_max = training(D_t, x_l, x_u)
-#    Q_t = Crossover+ Mutation(P_t)    TODO
-    if count == 0:
-        Q_t = progress(Q_t, n, x_min, x_max, x_l, x_u, predict)
-#    Evaluate(Q_t, )    TODO
-#    A_t1 = (A_t + Q_t + P_t1tpast) - (P_ttpast + Q_ttpast)
-#    P_t1 = SurvivalSelection of NSGA2 with P_t + Q_t
-    return P_t1, A_t1, T_t
+    def NSGA2(self, R, P_t, A_t, T_t1, x_l, x_u, t_past, t_freq, t, n):   
+        T_t = update_target_archive(P_t, T_t1, R)
+        count = t % t_freq
+        if count == 0:
+            D_t = archive_mapping(A_t, T_t, R)
+            predict, x_min, x_max = training(D_t, x_l, x_u)
+        offspring = algorithms.varAnd(P_t, self.toolbox, cxpb=1.0, mutpb=1.0)
+        if count == 0:
+            Q_t = progress(Q_t, n, x_min, x_max, x_l, x_u, predict)
+    #    Evaluate(Q_t, )    TODO
+    #    A_t1 = (A_t + Q_t + P_t1tpast) - (P_ttpast + Q_ttpast)
+        P_t1 = self.toolbox.select(P_t + offspring, len(P_t), ref_points=R)
+        return P_t1, A_t1, T_t
 
 
-def NSGA3(R, P_t, A_t, T_t1, x_l, x_u, t_past, t_freq, t, n):   
-    T_t = update_target_archive(P_t, T_t1, R)
-    count = t% t_freq
-    if count == 0:
-        D_t = archive_mapping(A_t, T_t, R)
-        predict, x_min, x_max = training(D_t, x_l, x_u)
-#    Q_t = Crossover+ Mutation(P_t)    TODO
-    if count == 0:
-        Q_t = progress(Q_t, n, x_min, x_max, x_l, x_u, predict)
-#    Evaluate(Q_t, )    TODO
-#    A_t1 = (A_t + Q_t + P_t1tpast) - (P_ttpast + Q_ttpast)
-#    P_t1 = SurvivalSelection of NSGA3 with P_t + Q_t
-    return P_t1, A_t1, T_t
+    def NSGA3(self, R, P_t, A_t, T_t1, x_l, x_u, t_past, t_freq, t, n):   
+        T_t = update_target_archive(P_t, T_t1, R)
+        count = t % t_freq
+        if count == 0:
+            D_t = archive_mapping(A_t, T_t, R)
+            predict, x_min, x_max = training(D_t, x_l, x_u)
+        offspring = algorithms.varAnd(P_t, self.toolbox, cxpb=1.0, mutpb=1.0)
+        if count == 0:
+            Q_t = progress(Q_t, n, x_min, x_max, x_l, x_u, predict)
+        self.toolbox.evaluate(offspring)
+    #    Evaluate(Q_t)    TODO
+    #    A_t1 = (A_t + Q_t + P_t1tpast) - (P_ttpast + Q_ttpast)
+        P_t1 = self.toolbox.select(P_t + offspring, len(P_t), ref_points=R)
+        return P_t1, A_t1, T_t
