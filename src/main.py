@@ -1,6 +1,8 @@
 import os
 import subprocess
 
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 
 def install_requirements():
     subprocess.run(["pip", "install", "-r", "requirements.txt"])
