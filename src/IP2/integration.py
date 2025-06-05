@@ -40,7 +40,7 @@ class EvolutionaryAlgorithm:
             predict, x_min, x_max = training(D_t, x_l, x_u)
         offspring = algorithms.varAnd(P_t, self.toolbox, cxpb=1.0, mutpb=1.0)
         if count == 0:
-            Q_t = progress(Q_t, n, x_min, x_max, x_l, x_u, predict)
+            Q_t = progress(offspring, n, x_min, x_max, x_l, x_u, predict)
     #    Evaluate(Q_t, )    TODO
     #    A_t1 = (A_t + Q_t + P_t1tpast) - (P_ttpast + Q_ttpast)
         P_t1 = self.toolbox.select(P_t + offspring, len(P_t), ref_points=R)
