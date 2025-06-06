@@ -66,6 +66,42 @@ def progress(Q_t, n, x_min, x_max, x_l, x_u, predict):
 
     return repaired_offspring
 
-
 def parabolic_repair(initial_offspring, jutted_offspring, x_l, x_u, alpha=1.2):
-    return jutted_offspring  # Placeholder for the actual repair logic
+    direction_vec = jutted_offspring - initial_offspring
+    repaired = False
+
+    for i in range(len(jutted_offspring)):
+        if direction_vec[i] == 0:
+            continue  # no movement in this dimension, skip
+
+        # Check lower bound violation
+        if jutted_offspring[i] < x_l[i]:
+            t_l = (x_l[i] - initial_offspring[i]) / direction_vec[i]
+            t_u = (x_u[i] - initial_offspring[i]) / direction_vec[i]
+            repaired = True
+            break
+
+        # Check upper bound violation
+        elif jutted_offspring[i] > x_u[i]:
+            t_l = (x_u[i] - initial_offspring[i]) / direction_vec[i]
+            t_u = (x_l[i] - initial_offspring[i]) / direction_vec[i]
+            repaired = True
+            break
+
+    if not repaired:
+        return jutted_offspring  # no repair needed
+
+    # intersection point calculation
+    X1 = initial_offspring + t_l * direction_vec
+    X2 = initial_offspring + t_u * direction_vec
+
+    # Compute distances
+    d = np.linalg.norm(jutted_offspring - X1)
+
+    r = np.random.uniform(0, 1)
+    tan_arg = (np.linalg.norm(X2)) / (alpha * d)
+    X_prime = d + alpha * d * np.tan(r * np.arctan(tan_arg))
+
+    unit_vec = direction_vec / np.linalg.norm(direction_vec)  # unit vector in the direction of movement
+
+    return X1 + X_prime * unit_vec  # new vector at dist X_prime from X1 in the direction of movement
