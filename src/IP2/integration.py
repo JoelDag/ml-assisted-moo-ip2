@@ -7,6 +7,9 @@ class EvolutionaryAlgorithm:
     def __init__(self, algo):
         self.algo = algo
         self.toolbox = base.Toolbox()
+        self.history_P = []
+        self.history_Q = []
+
 
         if algo not in ['NSGA2', 'NSGA3']:
             raise ValueError("Unsupported algorithm. Choose 'NSGA2' or 'NSGA3'.")
@@ -33,6 +36,7 @@ class EvolutionaryAlgorithm:
 
 
     def NSGA2(self, R, P_t, A_t, T_t1, x_l, x_u, t_past, t_freq, t, n):   
+        self.history_P.append(P_t)
         T_t = update_target_archive(P_t, T_t1, R)
         count = t % t_freq
         if count == 0:
@@ -41,8 +45,13 @@ class EvolutionaryAlgorithm:
         offspring = algorithms.varAnd(P_t, self.toolbox, cxpb=1.0, mutpb=1.0)
         if count == 0:
             Q_t = progress(offspring, n, x_min, x_max, x_l, x_u, predict)
+            self.history_Q.append(Q_t)
     #    Evaluate(Q_t, )    TODO
-    #    A_t1 = (A_t + Q_t + P_t1tpast) - (P_ttpast + Q_ttpast)
+        try:
+            A_t1 = list(set(A_t).union(Q_t, self.history_P[t+1-t_past]) - set(self.history_P[t-t_past] - (set(self.history_Q[t-t_past]))))
+        except ValueError:
+            raise ValueError("Not enough history available for past t_past iterations.")
+
         P_t1 = self.toolbox.select(P_t + offspring, len(P_t), ref_points=R)
         return P_t1, A_t1, T_t
 
@@ -58,6 +67,9 @@ class EvolutionaryAlgorithm:
             Q_t = progress(Q_t, n, x_min, x_max, x_l, x_u, predict)
         self.toolbox.evaluate(offspring)
     #    Evaluate(Q_t)    TODO
-    #    A_t1 = (A_t + Q_t + P_t1tpast) - (P_ttpast + Q_ttpast)
+        try:
+            A_t1 = list(set(A_t).union(Q_t, self.history_P[t+1-t_past]) - set(self.history_P[t-t_past] - (set(self.history_Q[t-t_past]))))
+        except ValueError:
+            raise ValueError("Not enough history available for past t_past iterations.")
         P_t1 = self.toolbox.select(P_t + offspring, len(P_t), ref_points=R)
         return P_t1, A_t1, T_t
