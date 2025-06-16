@@ -1,10 +1,26 @@
 import numpy as np
 
+def initialise_target_archive(P_t, R):
+    T_t = []
+    for rv in R:
+        best = None
+        best_val = float('inf')
+        for ind in P_t:
+            val = asf(np.array(ind.fitness.values), rv)
+            if val < best_val:
+                best = ind
+                best_val = val
+        T_t.append(best)
+    return T_t
+
 def update_target_archive(P_t, T_t1, R):
+    if T_t1 is None or len(T_t1) == 0:
+        # First generation → create targets directly from current parents
+        return initialise_target_archive(P_t, R)
     N = len(R)
     
-    F_P = np.array([sol.f for sol in P_t])
-    F_T = np.array([sol.f for sol in T_t_minus_1])
+    F_P = np.array([sol.fitness for sol in P_t])
+    F_T = np.array([sol.fitness for sol in T_t1])
 
     z_ideal = np.min(F_P, axis=0)   # ideal and nadir points
     z_nadir = np.max(F_P, axis=0)
@@ -29,9 +45,12 @@ def update_target_archive(P_t, T_t1, R):
 
 
 def archive_mapping(A_t, T_t, R):
+    if len(A_t) == 0 or len(T_t) == 0:
+        return []
+
     N = len(R)
     N_A = len(A_t)
-    F_A = np.array([sol.f for sol in A_t])
+    F_A = np.array([sol.fitness for sol in A_t])
     
     z_ideal = np.min(F_A, axis=0)   # ideal and nadir points
     z_nadir = np.max(F_A, axis=0)
@@ -45,16 +64,18 @@ def archive_mapping(A_t, T_t, R):
             metrics[j] = asf(F_A_norm[i], R[j])
     
         min_j = np.argmin(metrics)
-        x_input = A_t[i].x
-        x_target = T_t[min_j].x
-        
+        x_input = A_t[i]
+        x_target = T_t[min_j]
         D_t.append((x_input, x_target))
-    
+
     return D_t
 
-
 def normalize_objectives(F, z_ideal, z_nadir):
-    return (F - z_ideal) / (z_nadir - z_ideal + 1e-12)
+    F_values = np.array([f.values for f in F])
+    z_ideal_values = np.array(z_ideal.values)
+    z_nadir_values = np.array(z_nadir.values)
+    return (F_values - z_ideal_values) / (z_nadir_values - z_ideal_values + 1e-12)
+
 
 def asf(solution_f, ref_vector):
     ref_vector = np.where(ref_vector == 0, 1e-12, ref_vector)
