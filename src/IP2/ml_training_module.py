@@ -1,17 +1,19 @@
 from sklearn.ensemble import RandomForestRegressor
 import random
 import numpy as np
-
+from deap import creator
 
 def training(d_t, x_l, x_u):
+    if len(d_t) == 0:
+        return None, None, None
     input_vec, target_vec = zip(*d_t)
     n_samples, n_features = np.array(input_vec).shape
 
     input_vec = np.array(input_vec)
     target_vec = np.array(target_vec)
 
-    x_lt = np.minimum(input_vec.min(axis=0), target_vec.min(axis=0))
-    x_ut = np.maximum(input_vec.max(axis=0), target_vec.max(axis=0))
+    x_lt = np.minimum(np.nanmin(input_vec,axis=0), np.nanmin(target_vec,axis=0))
+    x_ut = np.maximum(np.nanmax(input_vec,axis=0), np.nanmax(target_vec,axis=0))
 
     x_min = []
     x_max = []
@@ -31,7 +33,12 @@ def training(d_t, x_l, x_u):
         model = RandomForestRegressor(n_estimators=n_samples,
                                       max_features=n_features,
                                       criterion="squared_error")
-        model.fit(input_vec_normalized, target_vec_normalized[:, i])
+        try:
+            model.fit(input_vec_normalized, target_vec_normalized[:, i])
+
+        except ValueError as e:
+            print(f"Error fitting model for feature {target_vec_normalized}: {e}")
+            continue
         models.append(model)
 
     def predict(x_normalized):
@@ -41,6 +48,8 @@ def training(d_t, x_l, x_u):
 
 
 def progress(Q_t, n, x_min, x_max, x_l, x_u, predict):
+    if predict is None:
+        return Q_t
     selected_offspring = random.sample(Q_t, len(Q_t) // 2)  # Randomly selected 50% of offspring
     repaired_offspring = []
 
@@ -59,10 +68,14 @@ def progress(Q_t, n, x_min, x_max, x_l, x_u, predict):
             if initial_offspring[k] <= x_l[k] + tolerance or initial_offspring[k] >= x_u[k] - tolerance:
                 denormalized_predictions[k] = initial_offspring[k]
 
+
         jutted_offspring = np.array(initial_offspring) + n * (
                 np.array(denormalized_predictions) - np.array(initial_offspring))
 
-        repaired_offspring.append(parabolic_repair(initial_offspring, jutted_offspring, x_l, x_u))
+        repaired_offspring.append(creator.Individual(parabolic_repair(initial_offspring, jutted_offspring, x_l, x_u)))
+
+    # clip the repaired offspring to the bounds
+    repaired_offspring = [creator.Individual(ind) for ind in np.clip(repaired_offspring, x_l, x_u)]
 
     return repaired_offspring
 
