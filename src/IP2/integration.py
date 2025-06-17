@@ -56,16 +56,12 @@ class EvolutionaryAlgorithm:
         Q_t = algorithms.varAnd(P_t, self.toolbox, cxpb=1.0, mutpb=1.0)
         if count == 0:
             Q_t = progress(Q_t, n, x_min, x_max, x_l, x_u, predict)
-            self.history_Q.append(Q_t)
+        self.history_Q.append(Q_t)
         Q_t = evaluate_population(Q_t)
-        try:
-            A_t1 = list(set(A_t).union(Q_t, self.history_P[t+1-t_past]) - set(self.history_P[t-t_past] - (set(self.history_Q[t-t_past]))))
-        except ValueError:
-            raise ValueError("Not enough history available for past t_past iterations.")
 
-        # A_t1 = A_t + P_t + Q_t
-        # if len(A_t1) > t_past * len(P_t):
-        #     A_t1 = A_t1[-(t_past * len(P_t)):]
+        A_t1 = A_t + P_t + Q_t
+        if len(A_t1) > t_past * len(P_t):
+            A_t1 = A_t1[-(t_past * len(P_t)):]
 
         P_t1 = self.toolbox.select(P_t + Q_t, len(P_t))
 
