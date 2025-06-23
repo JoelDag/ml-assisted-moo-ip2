@@ -3,6 +3,7 @@ from deap.benchmarks import zdt2, zdt1
 
 from input_archive import update_target_archive, archive_mapping
 from ml_training_module import training, progress
+from MNFProblem.mnf import MNFfunction
 from deap import base, creator, tools, algorithms
 import random
 
@@ -14,11 +15,12 @@ def evaluate_population(Qt):
     return Qt
 
 class EvolutionaryAlgorithm:
-    def __init__(self, algo, n, m):
+    def __init__(self, algo, n, m, problem="makeMNF1efunction"):
         self.algo = algo
         self.toolbox = base.Toolbox()
         self.m = m # Number of objectives
         self.n = n  # Number of decision variables
+        self.problem = MNFfunction(problem)
         self.history_P = []
         self.history_Q = []
 
@@ -28,23 +30,28 @@ class EvolutionaryAlgorithm:
 
         self._setup_deap()
 
+    def eval_pymoo(self,individual):
+        X = np.asarray(individual, dtype=float).reshape(1, -1)
+        F = self.problem.evaluate(X)                
+        return tuple(F[0])    
+
     def _setup_deap(self):
         # Erzeuge DEAP Typen
         creator.create("FitnessMin", base.Fitness, weights=(-1.0,) * self.m)
         creator.create("Individual", list, fitness=creator.FitnessMin)
 
         # Register toolbox components
-        self.toolbox.register("attr_float", random.random)
+        self.toolbox.register("attr_float", random.uniform, float(self.problem.xl[0]), float(self.problem.xu[0]))
         self.toolbox.register("individual", tools.initRepeat, creator.Individual, self.toolbox.attr_float, n=self.n)
         self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
 
-        self.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=10, low=0.0, up=1.0)
-        self.toolbox.register("mutate", tools.mutPolynomialBounded, eta=20, low=0.0, up=1.0, indpb=1 / self.n)
+        self.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=10, low=self.problem.xl, up=self.problem.xu)
+        self.toolbox.register("mutate", tools.mutPolynomialBounded, eta=20, low=self.problem.xl, up=self.problem.xu, indpb=1 / self.n)
         if self.algo == 'NSGA2':
             self.toolbox.register("select", tools.selNSGA2)
         elif self.algo == 'NSGA3':
             self.toolbox.register("select", tools.selNSGA3)
-        # self.toolbox.register("evaluate", self.evaluate)
+        self.toolbox.register("evaluate", self.eval_pymoo)
 
     def NSGA2(self, R, P_t, A_t, T_t1, x_l, x_u, t_past, t_freq, t, n):
         self.history_P.append(P_t)
