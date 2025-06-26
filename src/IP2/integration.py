@@ -1,32 +1,37 @@
 from functools import partial
-from src.test_suites.MMF1 import MMF1
-
+from rpy2 import robjects
 import numpy as np
-from deap.benchmarks import zdt2, zdt1
-
 from input_archive import update_target_archive, archive_mapping
 from ml_training_module import training, progress
-from MNFProblem.mnf import MNFfunction
+from src.MMFProblem.mmf import MMFfunction
 from deap import base, creator, tools, algorithms
 import random
+from rpy2.robjects.packages import importr
 
-from src.test_suites.MMF2 import MMF2
+smoof = importr('smoof')
 
+def replace_nan_with_column_mean(offspring):
+    offspring = np.array(offspring, dtype=np.float64)
+    col_means = np.nanmean(offspring, axis=0)  # mean ignoring NaNs
+    # Replace NaNs with column means
+    inds = np.where(np.isnan(offspring))
+    offspring[inds] = np.take(col_means, inds[1])
+    return [creator.Individual(ind.tolist()) for ind in offspring]
 
-def evaluate_population(Qt):
+def evaluate_population(problem, Qt):
     for ind in Qt:
-        ind.fitness.values = zdt2(ind)
-        if any(np.isnan(ind.fitness.values)):
-            ind.fitness.values = (1e6, 1e6)
+        ind.fitness.values = problem.evaluate(np.array(ind))
     return Qt
 
+
 class EvolutionaryAlgorithm:
-    def __init__(self, algo, n, m, problem="makeMNF1efunction"):
+    def __init__(self, algo, n, m, test_problem):
         self.algo = algo
         self.toolbox = base.Toolbox()
         self.m = m # Number of objectives
         self.n = n  # Number of decision variables
-        self.problem = MNFfunction(problem)
+        robjects.r[test_problem]()
+        self.problem = MMFfunction(test_problem)
         self.history_P = []
         self.history_Q = []
 
@@ -68,38 +73,33 @@ class EvolutionaryAlgorithm:
         self.toolbox.register("attr_float", random.uniform, float(self.problem.xl[0]), float(self.problem.xu[0]))
         self.toolbox.register("individual", tools.initRepeat, creator.Individual, self.toolbox.attr_float, n=self.n)
         self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
-
-        self.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=10, low=self.problem.xl, up=self.problem.xu)
-        self.toolbox.register("mutate", tools.mutPolynomialBounded, eta=20, low=self.problem.xl, up=self.problem.xu, indpb=1 / self.n)
-        # self.toolbox.register("mate", tools.cxSimulatedBinaryBounded, eta=10, low=self.xl, up=self.xu)
-        # self.toolbox.register("mutate", tools.mutPolynomialBounded, eta=20, low=self.xl, up=self.xu, indpb=1 / self.n)
-
-        self.toolbox.register("mate", partial(self.bounded_sbx, eta=10, xl=self.xl, xu=self.xu))
-        self.toolbox.register("mutate", partial(self.bounded_polynomial_mutation_safe, eta=20, xl=self.xl, xu=self.xu, indpb=1.0 / self.n))
+        self.toolbox.register("mate", partial(self.bounded_sbx, eta=10, xl=self.problem.xl, xu=self.problem.xu))
+        self.toolbox.register("mutate", partial(self.bounded_polynomial_mutation_safe, eta=20, xl=self.problem.xl, xu=self.problem.xu, indpb=1.0 / self.n))
 
         if self.algo == 'NSGA2':
             self.toolbox.register("select", tools.selNSGA2)
+            self.toolbox.register("evaluate", self.eval_pymoo)
         elif self.algo == 'NSGA3':
             self.toolbox.register("select", tools.selNSGA3)
         self.toolbox.register("evaluate", self.eval_pymoo)
 
-    def NSGA2(self, R, P_t, A_t, T_t1, x_l, x_u, t_past, t_freq, t, n):
+    def NSGA2(self, R, P_t, A_t, T_t1, t_past, t_freq, t, n, jutting_param):
         self.history_P.append(P_t)
         T_t = update_target_archive(P_t, T_t1, R)
         count = t % t_freq
         if count == 0:
             D_t = archive_mapping(A_t, T_t, R)
-            predict, x_min, x_max = training(D_t, x_l, x_u)
+            predict, x_min, x_max = training(D_t, self.problem.xl, self.problem.xu)
         Q_t = algorithms.varAnd(P_t, self.toolbox, cxpb=0.9, mutpb=1.0 / n)
         for item in Q_t:
             for j, i in enumerate(item):
                 if isinstance(i, list):
                     item[j] = i[0]
-        print()
+        Q_t = replace_nan_with_column_mean(Q_t)  # Ensure no NaNs in offspring
         if count == 0:
-            Q_t = progress(Q_t, 1.1, x_min, x_max, x_l, x_u, predict)
+            Q_t = progress(Q_t, jutting_param, x_min, x_max, self.problem.xl, self.problem.xu, predict)
         self.history_Q.append(Q_t)
-        Q_t = evaluate_population(Q_t)
+        Q_t = evaluate_population(self.problem, Q_t)
 
         A_t1 = A_t + P_t + Q_t
         if len(A_t1) > t_past * len(P_t):
@@ -134,7 +134,8 @@ class EvolutionaryAlgorithm:
             for j, i in enumerate(item):
                 if isinstance(i, list):
                     item[j] = i[0]
+        offspring = replace_nan_with_column_mean(offspring)  # Ensure no NaNs in offspring
         for ind in offspring:
-            ind.fitness.values = zdt2(ind)
+            ind.fitness.values = self.problem.evaluate(np.array(ind))
         pop = self.toolbox.select(pop + offspring, len(pop))
         return pop
