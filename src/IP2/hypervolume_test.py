@@ -15,14 +15,14 @@ def hypervolume(front, ref_point):
     return hv
 
 pop_size = 100
-n_gen = 100
+n_gen = 30
 n_var = 10
 xl = np.zeros(n_var)
 xu = np.ones(n_var)
 ref_point = (1.1, 1.1) # For HV
 ref_vectors = [np.array([i/99, 1 - i/99]) for i in range(100)]
 
-ea = EvolutionaryAlgorithm(algo='NSGA2', n=n_var, m=2)
+ea = EvolutionaryAlgorithm(algo='NSGA2', n=n_var, m=2, xl = xl, xu = xu)
 
 # Initialize both populations
 pop_nsga2 = ea.toolbox.population(n=pop_size)
@@ -40,7 +40,7 @@ A_t, T_t = [], None
 # Evolution loop
 for t in range(n_gen):
     # --- NSGA-II
-    pop_nsga2 = ea.nsga2_without_IP(pop_nsga2)
+    pop_nsga2 = ea.nsga2_without_IP(pop_nsga2, n_var)
     front_nsga2 = tools.sortNondominated(pop_nsga2, pop_size, True)[0]
     hv_nsga2.append(hypervolume([ind.fitness.values for ind in front_nsga2], ref_point))
 
