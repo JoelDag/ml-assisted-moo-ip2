@@ -1,5 +1,4 @@
 import rpy2.robjects as robjects
-from rpy2.robjects.packages import importr
 import numpy as np
 from pymoo.core.problem import Problem
 
