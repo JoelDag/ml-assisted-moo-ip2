@@ -1,13 +1,13 @@
 from functools import partial
 from rpy2 import robjects
 import numpy as np
-from input_archive import update_target_archive, archive_mapping
-from ml_training_module import training, progress
+from .input_archive import update_target_archive, archive_mapping
+from .ml_training_module import training, progress
 from src.MMFProblem.mmf import MMFfunction
 from deap import base, creator, tools, algorithms
 import random
 from rpy2.robjects.packages import importr
-from src.IP2.utils import replace_nan_with_column_mean
+from .utils import replace_nan_with_column_mean
 
 smoof = importr('smoof')
 
@@ -30,6 +30,7 @@ class EvolutionaryAlgorithm:
 
     def eval_pymoo(self,individual):
         X = np.asarray(individual, dtype=float).reshape(1, -1)
+        print("Hello")
         F = self.problem.evaluate(X)
         return tuple(F[0])
 
@@ -86,7 +87,9 @@ class EvolutionaryAlgorithm:
         if count == 0:
             Q_t = progress(Q_t, jutting_param, x_min, x_max, self.problem.xl, self.problem.xu, predict)
         self.history_Q.append(Q_t)
-        Q_t = self.toolbox.evaluate(np.array(Q_t))
+
+        for ind in Q_t:
+            ind.fitness.values = self.problem.evaluate(np.array(ind))
 
         A_t1 = A_t + P_t + Q_t
         if len(A_t1) > t_past * len(P_t):
@@ -106,7 +109,8 @@ class EvolutionaryAlgorithm:
         offspring = algorithms.varAnd(P_t, self.toolbox, cxpb=1.0, mutpb=1.0)
         if count == 0:
             Q_t = progress(offspring, 1.1, x_min, x_max, x_l, x_u, predict)
-        Q_t = self.toolbox.evaluate(np.array(Q_t))
+        for ind in Q_t:
+            ind.fitness.values = self.problem.evaluate(np.array(ind))
         try:
             A_t1 = list(set(A_t).union(Q_t, self.history_P[t+1-t_past]) - set(self.history_P[t-t_past] - (set(self.history_Q[t-t_past]))))
         except ValueError:

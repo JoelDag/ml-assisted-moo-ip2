@@ -1,11 +1,10 @@
 import os
 import itertools
-
+from pathlib import Path
 from scipy.spatial.distance import cdist
 import numpy as np
 import scipy.io as sio
-from deap import creator, tools
-from integration import EvolutionaryAlgorithm, evaluate_population
+from deap import creator
 import matplotlib.pyplot as plt
 
 def replace_nan_with_column_mean(offspring):
@@ -49,8 +48,9 @@ def compute_hypervolume(front, ref_point):
     return hv
 
 def load_reference_pf(problem_name: str, evaluator) -> np.ndarray:
+    DATA_DIR = Path(__file__).resolve().parent.parents[1]/"Reference_PSPF_data"
     problem_name = problem_name.replace("make", "").replace("Function", "")
-    file_path = os.path.join("Reference_PSPF_data", f"{problem_name}_Reference_PSPF_data.mat")
+    file_path = os.path.join(DATA_DIR, f"{problem_name}_Reference_PSPF_data.mat")
     mat = sio.loadmat(file_path)
 
     if "PF" in mat:

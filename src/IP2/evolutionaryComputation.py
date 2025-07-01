@@ -1,6 +1,8 @@
 from .integration import EvolutionaryAlgorithm
-from .utils import load_reference_pf, generate_reference_vectors, compute_hypervolume, evaluate_population, compute_igd, plot
-from deap import base, creator, tools
+from .utils import load_reference_pf, generate_reference_vectors, compute_hypervolume, compute_igd, plot
+from deap import tools
+import numpy as np
+import itertools
 
 
 class evolutionaryRunner:
@@ -20,7 +22,9 @@ class evolutionaryRunner:
         self.ref_point = (1.1, 1.1)  # For HV
         self.ref_vectors = generate_reference_vectors(self.m_obj, self.h_interval)
         self.init_pop = self.ea.toolbox.population(n=self.pop_size)
-        self.init_pop = evaluate_population(self.ea.problem, self.init_pop)
+        for ind in self.init_pop:
+            ind.fitness.values = self.ea.problem.evaluate(np.array(ind))
+#        self.init_pop = self.ea.problem.evaluate(np.array(self.init_pop))
 
     def run(self):
         A_t, T_t = [], None
