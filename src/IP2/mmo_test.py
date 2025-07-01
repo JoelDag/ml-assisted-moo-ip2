@@ -1,7 +1,9 @@
+import os
 import itertools
 
 from scipy.spatial.distance import cdist
 import numpy as np
+import scipy.io as sio
 from deap import tools
 from integration import EvolutionaryAlgorithm, evaluate_population
 import matplotlib.pyplot as plt
@@ -38,8 +40,24 @@ def compute_hypervolume(front, ref_point):
         prev_f2 = f2
     return hv
 
+def load_reference_pf(problem_name: str, evaluator) -> np.ndarray:
+    file_path = os.path.join("Reference_PSPF_data", f"{problem_name}_Reference_PSPF_data.mat")
+    mat = sio.loadmat(file_path)
+
+    if "PF" in mat:
+        return np.asarray(mat["PF"], dtype=float)
+    if "PS" not in mat:
+        raise KeyError(f"'PS' not found in reference file for {problem_name}")
+
+    ps = np.asarray(mat["PS"], dtype=float)
+    pf = np.vstack([evaluator(x) for x in ps])
+    return pf
+
 def main(pop_size, n_gen, n_var, m_obj, t_past, t_freq, test_problem, jutting_param, h_interval):
     ea = EvolutionaryAlgorithm(algo='NSGA2', n=n_var, m=m_obj, test_problem=test_problem)
+    prob_token = test_problem.replace("make", "").replace("Function", "")
+    ref_pf = load_reference_pf(prob_token, ea.problem.evaluate) 
+    
     pop_nsga2 = ea.toolbox.population(n=pop_size)
     pop_ip2 = ea.toolbox.population(n=pop_size)
 
@@ -48,8 +66,8 @@ def main(pop_size, n_gen, n_var, m_obj, t_past, t_freq, test_problem, jutting_pa
     A_t, T_t = [], None
 
     # Metric trackers
-    hv_ip2 = []
-    hv_nsga2 = []
+    hv_ip2, hv_nsga2 = [], []
+    igd_ip2, igd_nsga2 = [], []
     ref_point = (1.1, 1.1)  # For HV
     ref_vectors = generate_reference_vectors(m_obj, h_interval)
 
@@ -66,15 +84,26 @@ def main(pop_size, n_gen, n_var, m_obj, t_past, t_freq, test_problem, jutting_pa
                                      t_freq, t, n_var, jutting_param)
         front_ip2 = tools.sortNondominated(pop_ip2, pop_size, True)[0]
         hv_ip2.append(compute_hypervolume([ind.fitness.values for ind in front_ip2], ref_point))
+        
+        igd_nsga2.append(compute_igd(ref_pf, [ind.fitness.values for ind in front_nsga2]))
+        igd_ip2.append(compute_igd(ref_pf, [ind.fitness.values for ind in front_ip2]))
 
     plt.plot(hv_nsga2, label="NSGA-II")
     plt.plot(hv_ip2, label="NSGA-II + IP2")
     plt.xlabel("Generation")
     plt.ylabel("Hypervolume")
-    plt.title("Performance on MMF1")
+    plt.title(f"HV Performance on {prob_token}")
     plt.legend()
     plt.grid(True)
     plt.show()
+    
+    plt.figure()
+    plt.plot(igd_nsga2, label="NSGA-II")
+    plt.plot(igd_ip2, label="NSGA-II + IP2")
+    plt.xlabel("Generation")
+    plt.ylabel("IGD")
+    plt.title(f"IGD on {prob_token}")
+    plt.legend(); plt.grid(True); plt.show()
 
 if __name__ == "__main__":
     main(pop_size=100,
