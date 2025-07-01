@@ -77,7 +77,6 @@ def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem):
     plt.legend()
     plt.grid(True)
     plt.savefig(f"plots/hv/{test_problem}.png")
-    plt.show()
     
     plt.figure()
     plt.plot(igd_nsga2, label="NSGA-II")
@@ -88,4 +87,3 @@ def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem):
     plt.legend()
     plt.grid(True)
     plt.savefig(f"plots/igd/{test_problem}.png")
-    plt.show()

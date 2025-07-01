@@ -28,11 +28,10 @@ def run_problem(problem):
 
 if __name__ == "__main__":
     install_requirements()
-    test_problems = ["makeMMF1Function"]
-    """test_problems = [
+    test_problems = [
         "makeMMF1Function",
-        "makeMMF1_eFunction",
-        "makeMMF1_zFunction",
+        "makeMMF1eFunction",
+        "makeMMF1zFunction",
         "makeMMF2Function",
         "makeMMF3Function",
         "makeMMF4Function",
@@ -46,12 +45,17 @@ if __name__ == "__main__":
         "makeMMF12Function",
         "makeMMF13Function",
         "makeMMF14Function",
-        "makeMMF14_aFunction",
+        "makeMMF14aFunction",
         "makeMMF15Function",
-        "makeMMF15_aFunction",
+        "makeMMF15aFunction",
         "makeOmniTestFunction",
         "makeSYMPARTrotatedFunction",
-        "makeSYMPARTsimpleFunction"]"""
+        "makeSYMPARTsimpleFunction"]
+    test_problems = [
+        "makeMMF14Function",
+        "makeMMF14aFunction",
+        "makeMMF15Function",
+        "makeMMF15aFunction"]
     
     parser = argparse.ArgumentParser(
         description="Starting Evolutionary Computation parallel or sequentially for multiple test problems.")

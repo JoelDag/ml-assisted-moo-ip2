@@ -5,7 +5,19 @@ from pymoo.core.problem import Problem
 class MMFfunction(Problem):
 
     def __init__(self, smoofname: str = None):
+        self.parameterizedFunctions = [
+        "makeMMF14Function",
+        "makeMMF14aFunction",
+        "makeMMF15Function",
+        "makeMMF15aFunction"]
+        
         self.func = robjects.r[smoofname]()
+        if smoofname in self.parameterizedFFunctions:
+            self.func = self.func(**{
+                "dimensions"    : 2,
+                "n.objectives"  : 2
+            })
+
         xl = robjects.r['getLowerBoxConstraints'](self.func)
         xu = robjects.r['getUpperBoxConstraints'](self.func)
         super().__init__(n_var=2, n_obj=2, xl=xl, xu=xu)
