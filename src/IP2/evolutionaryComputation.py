@@ -28,10 +28,11 @@ class evolutionaryRunner:
         igd_ip2, igd_nsga2 = [], []
 
         if self.algorithm == 'NSGA2':
-            self.run_NSGA2(hv_ip2, hv_nsga2, igd_ip2, igd_nsga2, A_t, T_t)
+            hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, front_ip2, front_nsga2 = self.run_NSGA2(hv_ip2, hv_nsga2, igd_ip2, igd_nsga2, A_t, T_t)
 
 
         plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, self.test_problem)
+        return [front_ip2, front_nsga2]
 
     def run_NSGA2(self, hv_with_IP2, hv_without_IP2, igd_with_IP2, igd_without_IP2, A_t, T_t):
         for t in range(self.n_gen):
@@ -50,3 +51,5 @@ class evolutionaryRunner:
 
             igd_with_IP2.append(compute_igd(self.ref_pf, [ind.fitness.values for ind in front_nsga2]))
             igd_without_IP2.append(compute_igd(self.ref_pf, [ind.fitness.values for ind in front_ip2]))
+
+        return hv_with_IP2, hv_without_IP2, igd_with_IP2, igd_without_IP2, front_ip2, front_nsga2

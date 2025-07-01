@@ -63,6 +63,12 @@ def load_reference_pf(problem_name: str, evaluator) -> np.ndarray:
     return pf
 
 def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem):
+    if not os.path.exists("plots"):
+        os.makedirs("plots", exist_ok=True)
+        os.makedirs("plots/hv", exist_ok=True)
+        os.makedirs("plots/igd", exist_ok=True)
+
+
     plt.plot(hv_nsga2, label="NSGA-II")
     plt.plot(hv_ip2, label="NSGA-II + IP2")
     plt.xlabel("Generation")
@@ -70,6 +76,7 @@ def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem):
     plt.title(f"HV Performance on {test_problem}")
     plt.legend()
     plt.grid(True)
+    plt.savefig(f"plots/hv/{test_problem}.png")
     plt.show()
     
     plt.figure()
@@ -78,4 +85,7 @@ def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem):
     plt.xlabel("Generation")
     plt.ylabel("IGD")
     plt.title(f"IGD on {test_problem}")
-    plt.legend(); plt.grid(True); plt.show()
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(f"plots/igd/{test_problem}.png")
+    plt.show()
