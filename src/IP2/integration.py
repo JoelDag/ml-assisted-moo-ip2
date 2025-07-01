@@ -7,22 +7,9 @@ from src.MMFProblem.mmf import MMFfunction
 from deap import base, creator, tools, algorithms
 import random
 from rpy2.robjects.packages import importr
+from src.IP2.utils import replace_nan_with_column_mean
 
 smoof = importr('smoof')
-
-def replace_nan_with_column_mean(offspring):
-    offspring = np.array(offspring, dtype=np.float64)
-    col_means = np.nanmean(offspring, axis=0)  # mean ignoring NaNs
-    # Replace NaNs with column means
-    inds = np.where(np.isnan(offspring))
-    offspring[inds] = np.take(col_means, inds[1])
-    return [creator.Individual(ind.tolist()) for ind in offspring]
-
-def evaluate_population(problem, Qt):
-    for ind in Qt:
-        ind.fitness.values = problem.evaluate(np.array(ind))
-    return Qt
-
 
 class EvolutionaryAlgorithm:
     def __init__(self, algo, n, m, test_problem):
@@ -78,9 +65,9 @@ class EvolutionaryAlgorithm:
 
         if self.algo == 'NSGA2':
             self.toolbox.register("select", tools.selNSGA2)
-            self.toolbox.register("evaluate", self.eval_pymoo)
         elif self.algo == 'NSGA3':
             self.toolbox.register("select", tools.selNSGA3)
+
         self.toolbox.register("evaluate", self.eval_pymoo)
 
     def NSGA2(self, R, P_t, A_t, T_t1, t_past, t_freq, t, n, jutting_param):
@@ -99,7 +86,7 @@ class EvolutionaryAlgorithm:
         if count == 0:
             Q_t = progress(Q_t, jutting_param, x_min, x_max, self.problem.xl, self.problem.xu, predict)
         self.history_Q.append(Q_t)
-        Q_t = evaluate_population(self.problem, Q_t)
+        Q_t = self.toolbox.evaluate(np.array(Q_t))
 
         A_t1 = A_t + P_t + Q_t
         if len(A_t1) > t_past * len(P_t):
@@ -119,8 +106,7 @@ class EvolutionaryAlgorithm:
         offspring = algorithms.varAnd(P_t, self.toolbox, cxpb=1.0, mutpb=1.0)
         if count == 0:
             Q_t = progress(offspring, 1.1, x_min, x_max, x_l, x_u, predict)
-        self.toolbox.evaluate(offspring)
-    #    Evaluate(Q_t)    TODO
+        Q_t = self.toolbox.evaluate(np.array(Q_t))
         try:
             A_t1 = list(set(A_t).union(Q_t, self.history_P[t+1-t_past]) - set(self.history_P[t-t_past] - (set(self.history_Q[t-t_past]))))
         except ValueError:
@@ -128,7 +114,7 @@ class EvolutionaryAlgorithm:
         P_t1 = self.toolbox.select(P_t + offspring, len(P_t), ref_points=R)
         # return P_t1, A_t1, T_t
 
-    def nsga2_without_IP(self, pop, n):
+    def NSGA2_without_IP(self, pop, n):
         offspring = algorithms.varAnd(pop, self.toolbox, cxpb=0.9, mutpb=1.0 / n)
         for item in offspring:
             for j, i in enumerate(item):
@@ -136,6 +122,6 @@ class EvolutionaryAlgorithm:
                     item[j] = i[0]
         offspring = replace_nan_with_column_mean(offspring)  # Ensure no NaNs in offspring
         for ind in offspring:
-            ind.fitness.values = self.problem.evaluate(np.array(ind))
+            ind.fitness.values = self.toolbox.evaluate(np.array(ind))
         pop = self.toolbox.select(pop + offspring, len(pop))
         return pop

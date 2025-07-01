@@ -4,9 +4,17 @@ import itertools
 from scipy.spatial.distance import cdist
 import numpy as np
 import scipy.io as sio
-from deap import tools
+from deap import creator, tools
 from integration import EvolutionaryAlgorithm, evaluate_population
 import matplotlib.pyplot as plt
+
+def replace_nan_with_column_mean(offspring):
+    offspring = np.array(offspring, dtype=np.float64)
+    col_means = np.nanmean(offspring, axis=0)  # mean ignoring NaNs
+    # Replace NaNs with column means
+    inds = np.where(np.isnan(offspring))
+    offspring[inds] = np.take(col_means, inds[1])
+    return [creator.Individual(ind.tolist()) for ind in offspring]
 
 
 def generate_reference_vectors(m_obj, h_interval):
@@ -41,6 +49,7 @@ def compute_hypervolume(front, ref_point):
     return hv
 
 def load_reference_pf(problem_name: str, evaluator) -> np.ndarray:
+    problem_name = problem_name.replace("make", "").replace("Function", "")
     file_path = os.path.join("Reference_PSPF_data", f"{problem_name}_Reference_PSPF_data.mat")
     mat = sio.loadmat(file_path)
 
@@ -53,46 +62,12 @@ def load_reference_pf(problem_name: str, evaluator) -> np.ndarray:
     pf = np.vstack([evaluator(x) for x in ps])
     return pf
 
-def main(pop_size, n_gen, n_var, m_obj, t_past, t_freq, test_problem, jutting_param, h_interval):
-    ea = EvolutionaryAlgorithm(algo='NSGA2', n=n_var, m=m_obj, test_problem=test_problem)
-    prob_token = test_problem.replace("make", "").replace("Function", "")
-    ref_pf = load_reference_pf(prob_token, ea.problem.evaluate) 
-    
-    pop_nsga2 = ea.toolbox.population(n=pop_size)
-    pop_ip2 = ea.toolbox.population(n=pop_size)
-
-    pop_nsga2 = evaluate_population(ea.problem, pop_nsga2)
-    pop_ip2 = evaluate_population(ea.problem, pop_ip2)
-    A_t, T_t = [], None
-
-    # Metric trackers
-    hv_ip2, hv_nsga2 = [], []
-    igd_ip2, igd_nsga2 = [], []
-    ref_point = (1.1, 1.1)  # For HV
-    ref_vectors = generate_reference_vectors(m_obj, h_interval)
-
-    for t in range(n_gen):
-        # NSGA-II
-        pop_nsga2 = ea.nsga2_without_IP(pop_nsga2, n_var)
-        front_nsga2 = tools.sortNondominated(pop_nsga2, pop_size, True)[0]
-        hv_nsga2.append(compute_hypervolume([ind.fitness.values for ind in front_nsga2], ref_point))
-
-        # NSGA-II with IP2
-        pop_ip2, A_t, T_t = ea.NSGA2(ref_vectors,
-                                     pop_ip2, A_t, T_t,
-                                     t_past,
-                                     t_freq, t, n_var, jutting_param)
-        front_ip2 = tools.sortNondominated(pop_ip2, pop_size, True)[0]
-        hv_ip2.append(compute_hypervolume([ind.fitness.values for ind in front_ip2], ref_point))
-        
-        igd_nsga2.append(compute_igd(ref_pf, [ind.fitness.values for ind in front_nsga2]))
-        igd_ip2.append(compute_igd(ref_pf, [ind.fitness.values for ind in front_ip2]))
-
+def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem):
     plt.plot(hv_nsga2, label="NSGA-II")
     plt.plot(hv_ip2, label="NSGA-II + IP2")
     plt.xlabel("Generation")
     plt.ylabel("Hypervolume")
-    plt.title(f"HV Performance on {prob_token}")
+    plt.title(f"HV Performance on {test_problem}")
     plt.legend()
     plt.grid(True)
     plt.show()
@@ -102,11 +77,5 @@ def main(pop_size, n_gen, n_var, m_obj, t_past, t_freq, test_problem, jutting_pa
     plt.plot(igd_ip2, label="NSGA-II + IP2")
     plt.xlabel("Generation")
     plt.ylabel("IGD")
-    plt.title(f"IGD on {prob_token}")
+    plt.title(f"IGD on {test_problem}")
     plt.legend(); plt.grid(True); plt.show()
-
-if __name__ == "__main__":
-    main(pop_size=100,
-         n_gen=200,
-         n_var=2, m_obj=2, t_past=10,
-         t_freq=5, test_problem="makeMMF1Function", jutting_param=1.1, h_interval=3)
