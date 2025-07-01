@@ -39,15 +39,16 @@ class evolutionaryRunner:
         return [front_ip2, front_nsga2]
 
     def run_NSGA2(self, hv_with_IP2, hv_without_IP2, igd_with_IP2, igd_without_IP2, A_t, T_t):
+        pop_ip2, pop_nsga2 = self.init_pop, self.init_pop
         for t in range(self.n_gen):
             # NSGA-II
-            pop_nsga2 = self.ea.NSGA2_without_IP(self.init_pop, self.n_var)
+            pop_nsga2 = self.ea.NSGA2_without_IP(pop_nsga2, self.n_var)
             front_nsga2 = tools.sortNondominated(pop_nsga2, self.pop_size, True)[0]
             hv_without_IP2.append(compute_hypervolume([ind.fitness.values for ind in front_nsga2], self.ref_point))
 
             # NSGA-II with IP2
             pop_ip2, A_t, T_t = self.ea.NSGA2(self.ref_vectors,
-                                        self.init_pop, A_t, T_t,
+                                        pop_ip2, A_t, T_t,
                                         self.t_past,
                                         self.t_freq, t, self.n_var, self.jutting_param)
             front_ip2 = tools.sortNondominated(pop_ip2, self.pop_size, True)[0]

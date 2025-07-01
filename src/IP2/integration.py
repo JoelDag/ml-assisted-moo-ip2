@@ -30,7 +30,6 @@ class EvolutionaryAlgorithm:
 
     def eval_pymoo(self,individual):
         X = np.asarray(individual, dtype=float).reshape(1, -1)
-        print("Hello")
         F = self.problem.evaluate(X)
         return tuple(F[0])
 
@@ -87,7 +86,6 @@ class EvolutionaryAlgorithm:
         if count == 0:
             Q_t = progress(Q_t, jutting_param, x_min, x_max, self.problem.xl, self.problem.xu, predict)
         self.history_Q.append(Q_t)
-
         for ind in Q_t:
             ind.fitness.values = self.problem.evaluate(np.array(ind))
 
