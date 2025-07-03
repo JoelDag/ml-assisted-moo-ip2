@@ -4,6 +4,8 @@ import argparse
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from src.IP2.evolutionaryComputation import evolutionaryRunner
+from src.IP2.utils import get_three_objectives_problems
+
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -12,11 +14,17 @@ def install_requirements():
 
 def run_problem(problem):
     print(f"Running evolutionary computation for {problem}...")
+    if problem in get_three_objectives_problems():
+        n_var, m_obj = 3, 3
+    elif problem == 'makeMMF13Function':
+        n_var, m_obj = 3, 2
+    else:
+        n_var, m_obj = 2, 2
     runner = evolutionaryRunner(pop_size=100,
-                                n_gen=200,
-                                n_var=2,
-                                m_obj=2,
-                                t_past=10,
+                                n_gen=100,
+                                n_var=n_var,
+                                m_obj=m_obj,
+                                t_past=5,
                                 t_freq=5,
                                 test_problem=problem,
                                 jutting_param=1.1,
@@ -36,7 +44,7 @@ def parallelization(parallel, test_problems, jobs):
         with ProcessPoolExecutor(max_workers=jobs) as pool:
             futures = {pool.submit(run_problem, prob): prob for prob in test_problems}
             for fut in as_completed(futures):
-                prob, res = fut.result()        
+                prob, res = fut.result()
                 results[prob] = res
                 print(f"[main] Finished with {prob}")
     print("[main] All computations finished.")

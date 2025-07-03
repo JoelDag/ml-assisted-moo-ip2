@@ -7,7 +7,8 @@ from src.MMFProblem.mmf import MMFfunction
 from deap import base, creator, tools, algorithms
 import random
 from rpy2.robjects.packages import importr
-from .utils import replace_nan_with_column_mean
+from .utils import replace_nan_with_column_mean, get_three_objectives_problems
+import warnings
 
 smoof = importr('smoof')
 
@@ -17,8 +18,11 @@ class EvolutionaryAlgorithm:
         self.toolbox = base.Toolbox()
         self.m = m # Number of objectives
         self.n = n  # Number of decision variables
-        robjects.r[test_problem]()
-        self.problem = MMFfunction(test_problem)
+        if test_problem in get_three_objectives_problems():
+            robjects.r[test_problem](n, m)  # Initialize the R function
+        else:
+            robjects.r[test_problem]()
+        self.problem = MMFfunction(self, test_problem)
         self.history_P = []
         self.history_Q = []
 
@@ -47,8 +51,10 @@ class EvolutionaryAlgorithm:
 
     def bounded_sbx(self, ind1, ind2, eta, xl, xu, **kwargs):
         for i in range(len(ind1)):
-            tools.cxSimulatedBinaryBounded(ind1, ind2, eta=eta, low=xl[i], up=xu[i])
-        return ind1, ind2
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                tools.cxSimulatedBinaryBounded(ind1, ind2, eta=eta, low=xl[i], up=xu[i])
+            return ind1, ind2
 
 
     def _setup_deap(self):

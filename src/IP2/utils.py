@@ -6,6 +6,10 @@ import numpy as np
 import scipy.io as sio
 from deap import creator
 import matplotlib.pyplot as plt
+import pygmo as pg
+
+def get_three_objectives_problems():
+    return ["makeMMF14Function", "makeMMF14aFunction", "makeMMF15Function", "makeMMF15aFunction"]
 
 def replace_nan_with_column_mean(offspring):
     offspring = np.array(offspring, dtype=np.float64)
@@ -24,6 +28,10 @@ def generate_reference_vectors(m_obj, h_interval):
             ref_vectors.append(vec)
     return np.array(ref_vectors)
 
+def normalize_front(front, min, max):
+    front = np.array(front)
+    return (front - min) / (max - min)
+
 # Metric Functions
 def compute_igd(reference_set, approx_set):
     distances = cdist(reference_set, approx_set)
@@ -38,14 +46,8 @@ def compute_psp(true_ps_sets, approx_set, threshold=0.05):
     return covered
 
 def compute_hypervolume(front, ref_point):
-    front = np.array(front)
-    sorted_front = front[np.argsort(front[:, 0])]
-    hv = 0.0
-    prev_f2 = ref_point[1]
-    for f1, f2 in sorted_front:
-        hv += (ref_point[0] - f1) * (prev_f2 - f2)
-        prev_f2 = f2
-    return hv
+    hv = pg.hypervolume(front)
+    return hv.compute(ref_point)
 
 def load_reference_pf(problem_name: str, evaluator) -> np.ndarray:
     DATA_DIR = Path(__file__).resolve().parent.parents[1]/"Reference_PSPF_data"
