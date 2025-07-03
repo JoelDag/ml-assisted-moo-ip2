@@ -48,6 +48,7 @@ def parallelization(parallel, test_problems, jobs):
                 results[prob] = res
                 print(f"[main] Finished with {prob}")
     print("[main] All computations finished.")
+    return results
 
 if __name__ == "__main__":
     install_requirements()
