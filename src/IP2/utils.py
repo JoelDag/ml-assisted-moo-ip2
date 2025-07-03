@@ -62,15 +62,15 @@ def load_reference_pf(problem_name: str, evaluator) -> np.ndarray:
     pf = np.vstack([evaluator(x) for x in ps])
     return pf
 
-def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem):
-    if not os.path.exists("plots"):
-        os.makedirs("plots", exist_ok=True)
-        os.makedirs("plots/hv", exist_ok=True)
-        os.makedirs("plots/igd", exist_ok=True)
+def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem, algorithm='NSGA-II'):
+    if not os.path.exists("plots_for_" + algorithm):
+        os.makedirs("plots_for_" + algorithm, exist_ok=True)
+        os.makedirs("plots_for_" + algorithm + "/hv", exist_ok=True)
+        os.makedirs("plots_for_" + algorithm + "/igd", exist_ok=True)
 
 
-    plt.plot(hv_nsga2, label="NSGA-II")
-    plt.plot(hv_ip2, label="NSGA-II + IP2")
+    plt.plot(hv_nsga2, label=algorithm)
+    plt.plot(hv_ip2, label=algorithm +" + IP2")
     plt.xlabel("Generation")
     plt.ylabel("Hypervolume")
     plt.title(f"HV Performance on {test_problem}")
@@ -79,8 +79,8 @@ def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem):
     plt.savefig(f"plots/hv/{test_problem}.png")
     
     plt.figure()
-    plt.plot(igd_nsga2, label="NSGA-II")
-    plt.plot(igd_ip2, label="NSGA-II + IP2")
+    plt.plot(igd_nsga2, label=algorithm)
+    plt.plot(igd_ip2, label=algorithm +" + IP2")
     plt.xlabel("Generation")
     plt.ylabel("IGD")
     plt.title(f"IGD on {test_problem}")

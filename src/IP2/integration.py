@@ -70,7 +70,7 @@ class EvolutionaryAlgorithm:
 
         self.toolbox.register("evaluate", self.eval_pymoo)
 
-    def NSGA2(self, R, P_t, A_t, T_t1, t_past, t_freq, t, n, jutting_param):
+    def NSGA(self, R, P_t, A_t, T_t1, t_past, t_freq, t, n, jutting_param):
         self.history_P.append(P_t)
         T_t = update_target_archive(P_t, T_t1, R)
         count = t % t_freq
@@ -89,34 +89,23 @@ class EvolutionaryAlgorithm:
         for ind in Q_t:
             ind.fitness.values = self.problem.evaluate(np.array(ind))
 
-        A_t1 = A_t + P_t + Q_t
-        if len(A_t1) > t_past * len(P_t):
-            A_t1 = A_t1[-(t_past * len(P_t)):]
+        A_t1 = A_t + [a for a in Q_t if a not in A_t]
+        if t+1 >= t_past:
+            A_t1 = A_t1 + [a for a in self.history_P[t+1-t_past] if a not in A_t1]
+        if t >= t_past:
+            A_t1 = [a for a in A_t1 if a not in self.history_P[t-t_past]]
+            A_t1 = [a for a in A_t1 if a not in self.history_Q[t-t_past]]
+        
+        print(len(A_t1))
 
-        P_t1 = self.toolbox.select(P_t + Q_t, len(P_t))
-
+        if self.algo == 'NSGA2':
+            P_t1 = self.toolbox.select(P_t + Q_t, len(P_t))
+        elif self.algo == 'NSGA3':
+            P_t1 = self.toolbox.select(P_t + Q_t, len(P_t), ref_points=R)
         return P_t1, A_t1, T_t
 
 
-    def NSGA3(self, R, P_t, A_t, T_t1, x_l, x_u, t_past, t_freq, t, n):
-        T_t = update_target_archive(P_t, T_t1, R)
-        count = t % t_freq
-        if count == 0:
-            D_t = archive_mapping(A_t, T_t, R)
-            predict, x_min, x_max = training(D_t, x_l, x_u)
-        offspring = algorithms.varAnd(P_t, self.toolbox, cxpb=1.0, mutpb=1.0)
-        if count == 0:
-            Q_t = progress(offspring, 1.1, x_min, x_max, x_l, x_u, predict)
-        for ind in Q_t:
-            ind.fitness.values = self.problem.evaluate(np.array(ind))
-        try:
-            A_t1 = list(set(A_t).union(Q_t, self.history_P[t+1-t_past]) - set(self.history_P[t-t_past] - (set(self.history_Q[t-t_past]))))
-        except ValueError:
-            raise ValueError("Not enough history available for past t_past iterations.")
-        P_t1 = self.toolbox.select(P_t + offspring, len(P_t), ref_points=R)
-        # return P_t1, A_t1, T_t
-
-    def NSGA2_without_IP(self, pop, n):
+    def NSGA_without_IP(self, pop, n, R):
         offspring = algorithms.varAnd(pop, self.toolbox, cxpb=0.9, mutpb=1.0 / n)
         for item in offspring:
             for j, i in enumerate(item):
@@ -125,5 +114,9 @@ class EvolutionaryAlgorithm:
         offspring = replace_nan_with_column_mean(offspring)  # Ensure no NaNs in offspring
         for ind in offspring:
             ind.fitness.values = self.toolbox.evaluate(np.array(ind))
-        pop = self.toolbox.select(pop + offspring, len(pop))
+        if self.algo == 'NSGA2':
+            pop = self.toolbox.select(pop + offspring, len(pop))
+        elif self.algo == 'NSGA3':
+            pop = self.toolbox.select(pop + offspring, len(pop), ref_points=R)
+            
         return pop

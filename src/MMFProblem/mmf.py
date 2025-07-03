@@ -12,7 +12,7 @@ class MMFfunction(Problem):
         "makeMMF15aFunction"]
         
         self.func = robjects.r[smoofname]()
-        if smoofname in self.parameterizedFFunctions:
+        if smoofname in self.parameterizedFunctions:
             self.func = self.func(**{
                 "dimensions"    : 2,
                 "n.objectives"  : 2

@@ -25,6 +25,21 @@ def run_problem(problem):
     res = runner.run()
     return problem, res
 
+def parallelization(parallel, test_problems, jobs):
+    if parallel or len(test_problems) == 1:
+        for prob in test_problems:
+            print(f"[main] Starting Computation for {prob} ...")
+            _, res = run_problem(prob)
+            results[prob] = res
+            print(f"[main] Finished with {prob}")
+    else:
+        with ProcessPoolExecutor(max_workers=jobs) as pool:
+            futures = {pool.submit(run_problem, prob): prob for prob in test_problems}
+            for fut in as_completed(futures):
+                prob, res = fut.result()        
+                results[prob] = res
+                print(f"[main] Finished with {prob}")
+    print("[main] All computations finished.")
 
 if __name__ == "__main__":
     install_requirements()
@@ -56,6 +71,7 @@ if __name__ == "__main__":
         "makeMMF14aFunction",
         "makeMMF15Function",
         "makeMMF15aFunction"]
+    test_problems = ["makeMMF8Function"]
     
     parser = argparse.ArgumentParser(
         description="Starting Evolutionary Computation parallel or sequentially for multiple test problems.")
@@ -71,22 +87,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     results = {}
-
-    if args.no_parallel or len(test_problems) == 1:
-        for prob in test_problems:
-            print(f"[main] Starting Computation for {prob} ...")
-            _, res = run_problem(prob)
-            results[prob] = res
-            print(f"[main] Finished with {prob}")
-    else:
-        with ProcessPoolExecutor(max_workers=args.jobs) as pool:
-            futures = {pool.submit(run_problem, prob): prob for prob in test_problems}
-            for fut in as_completed(futures):
-                prob, res = fut.result()        
-                results[prob] = res
-                print(f"[main] Finished with {prob}")
-    print("[main] All computations finished.")
-
+    results = parallelization(args.no_parallel, test_problems, args.jobs)
 
     for prob, res in results.items():
         print(f"[main] Results for {prob}: {res}")
