@@ -1,3 +1,5 @@
 src/__pycache__/main.cpython-312.pyc
 *.pyc
 *.png
+.idea
+*.log

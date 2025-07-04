@@ -1,12 +1,14 @@
 #!/bin/bash
 
-LOGDIR="runs"
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+LOGDIR="runs/run_$TIMESTAMP"
+LOGFILE="$LOGDIR/run_$TIMESTAMP.log"
 mkdir -p "$LOGDIR"
+
 JOBS=32
 NO_PARALLEL="" #bc default is parallel
 
-LOGFILE="run.log"
-touch "$LOGFILE"
+
 
 nohup python -m src.main \
   --logdir "$LOGDIR" \

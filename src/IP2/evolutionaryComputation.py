@@ -39,17 +39,19 @@ class evolutionaryRunner:
         for ind in self.init_pop:
             ind.fitness.values = self.ea.problem.evaluate(np.array(ind))
 
+        self.job_id = f"{self.test_problem}_tp{self.t_past}_tf{self.t_freq}_jut{self.jutting_param}_seed{self.seed}"
 
     def run(self):
         A_t, T_t = [], None
         hv_ip2, hv_nsga2 = [], []
         igd_ip2, igd_nsga2 = [], []
+        print(f"[{self.job_id}] Starting evolutionary run...")
 
         if self.algorithm == 'NSGA2' or self.algorithm == 'NSGA3':
             hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, front_ip2, front_nsga2 = self.run_NSGA(hv_ip2, hv_nsga2, igd_ip2, igd_nsga2, A_t, T_t)
 
-
-        plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, self.test_problem, algorithm=self.algorithm)
+        plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, self.test_problem, algorithm=self.algorithm, job_id=self.job_id)
+        print(f"[{self.job_id}] Finished plotting results.")
         return [front_ip2, front_nsga2]
 
     def run_NSGA(self, hv_with_IP2, hv_without_IP2, igd_with_IP2, igd_without_IP2, A_t, T_t):
@@ -74,6 +76,7 @@ class evolutionaryRunner:
 
             igd_with_IP2.append(compute_igd(self.ref_pf, [ind.fitness.values for ind in front_nsga2]))
             igd_without_IP2.append(compute_igd(self.ref_pf, [ind.fitness.values for ind in front_ip2]))
+            print(f"[{self.job_id}] Generation {t + 1}/{self.n_gen} complete.")
 
         all_points = np.array([
             obj for gen_front in history_fronts_nsga + history_fronts_ip2 for obj in gen_front

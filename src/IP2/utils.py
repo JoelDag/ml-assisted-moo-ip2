@@ -64,7 +64,7 @@ def load_reference_pf(problem_name: str, evaluator) -> np.ndarray:
     pf = np.vstack([evaluator(x) for x in ps])
     return pf
 
-def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem, algorithm='NSGA-II'):
+def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem, algorithm='NSGA-II', job_id="default"):
     os.makedirs("plots/hv", exist_ok=True)
     os.makedirs("plots/igd", exist_ok=True)
     if not os.path.exists("plots_for_" + algorithm):
@@ -80,7 +80,7 @@ def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem, algorithm='NSGA-II'
     plt.title(f"HV Performance on {test_problem}")
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"plots/hv/{safe_name}.png")
+    plt.savefig(f"plots/hv/{safe_name}_{job_id}.png")
     
     plt.figure()
     plt.plot(igd_nsga2, label=algorithm)
@@ -90,4 +90,4 @@ def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem, algorithm='NSGA-II'
     plt.title(f"IGD on {test_problem}")
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"plots/igd/{safe_name}.png")
+    plt.savefig(f"plots/igd/{safe_name}_{job_id}.png")

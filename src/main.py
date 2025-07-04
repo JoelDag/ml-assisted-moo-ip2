@@ -5,6 +5,7 @@ import argparse
 import multiprocessing
 import json
 
+from itertools import product
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from src.IP2.evolutionaryComputation import evolutionaryRunner
 from src.IP2.utils import get_three_objectives_problems
@@ -15,6 +16,12 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 def install_requirements():
     subprocess.run(["pip", "install", "-r", "requirements.txt"])
 
+def grid_search_space():
+    t_past_options = [2, 5, 10]
+    t_freq_options = [1, 5, 10]
+    jutting_options = [1.0, 1.1, 1.3]
+    return list(product(t_past_options, t_freq_options, jutting_options))
+
 def random_search_space(num_samples=20):
     return [
         (
@@ -24,7 +31,6 @@ def random_search_space(num_samples=20):
         )
         for _ in range(num_samples)
     ]
-search_space = random_search_space()
 
 def run_problem(args_tuple):
     problem, t_past, t_freq, jutting_param, seed = args_tuple
@@ -113,7 +119,8 @@ if __name__ == "__main__":
         "makeMMF15aFunction"]
     test_problems = ["makeMMF8Function"]
 
-    SEEDS = list(range(15))
+    SEEDS = list(range(7))
+    search_space = grid_search_space()
     job_list = [
         (problem, t_past, t_freq, jutting, seed)
         for (t_past, t_freq, jutting) in search_space
