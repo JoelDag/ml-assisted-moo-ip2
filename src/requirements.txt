@@ -4,6 +4,5 @@ pandas
 matplotlib
 pyyaml
 deap
-random
 rpy2
 pymoo

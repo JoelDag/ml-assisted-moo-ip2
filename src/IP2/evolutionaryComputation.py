@@ -1,12 +1,17 @@
+import numpy as np
+import random
+
+from deap import tools
 from .integration import EvolutionaryAlgorithm
 from .utils import load_reference_pf, generate_reference_vectors, compute_hypervolume, compute_igd, plot, \
     get_three_objectives_problems, normalize_front
-from deap import tools
-import numpy as np
+
+
+
 
 
 class evolutionaryRunner:
-    def __init__(self, pop_size, n_gen, n_var, m_obj, t_past, t_freq, test_problem, jutting_param, h_interval, algorithm='NSGA2'):
+    def __init__(self, pop_size, n_gen, n_var, m_obj, t_past, t_freq, test_problem, jutting_param, h_interval, algorithm='NSGA2', seed=None):
         self.pop_size = pop_size
         self.n_gen = n_gen
         self.n_var = n_var
@@ -17,6 +22,7 @@ class evolutionaryRunner:
         self.jutting_param = jutting_param
         self.h_interval = h_interval
         self.algorithm = algorithm
+        self.seed = seed
         self.ea = EvolutionaryAlgorithm(algo=algorithm, n=n_var, m=m_obj, test_problem=test_problem)
         self.ref_pf = load_reference_pf(self.test_problem, self.ea.problem.evaluate)
         if test_problem in get_three_objectives_problems():
@@ -24,21 +30,28 @@ class evolutionaryRunner:
         else:
             self.ref_point = (111.1, 111.1)
         self.ref_vectors = generate_reference_vectors(self.m_obj, self.h_interval)
+
+        if self.seed is not None:
+            random.seed(self.seed)
+            np.random.seed(self.seed)
+
         self.init_pop = self.ea.toolbox.population(n=self.pop_size)
         for ind in self.init_pop:
             ind.fitness.values = self.ea.problem.evaluate(np.array(ind))
 
+        self.job_id = f"{self.test_problem}_tp{self.t_past}_tf{self.t_freq}_jut{self.jutting_param}_seed{self.seed}"
 
     def run(self):
         A_t, T_t = [], None
         hv_ip2, hv_nsga2 = [], []
         igd_ip2, igd_nsga2 = [], []
+        print(f"[{self.job_id}] Starting evolutionary run...")
 
         if self.algorithm == 'NSGA2' or self.algorithm == 'NSGA3':
             hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, front_ip2, front_nsga2 = self.run_NSGA(hv_ip2, hv_nsga2, igd_ip2, igd_nsga2, A_t, T_t)
 
-
-        plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, self.test_problem, algorithm=self.algorithm)
+        plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, self.test_problem, algorithm=self.algorithm, job_id=self.job_id)
+        print(f"[{self.job_id}] Finished plotting results.")
         return [front_ip2, front_nsga2]
 
     def run_NSGA(self, hv_with_IP2, hv_without_IP2, igd_with_IP2, igd_without_IP2, A_t, T_t):
@@ -63,6 +76,7 @@ class evolutionaryRunner:
 
             igd_with_IP2.append(compute_igd(self.ref_pf, [ind.fitness.values for ind in front_nsga2]))
             igd_without_IP2.append(compute_igd(self.ref_pf, [ind.fitness.values for ind in front_ip2]))
+            print(f"[{self.job_id}] Generation {t + 1}/{self.n_gen} complete.")
 
         all_points = np.array([
             obj for gen_front in history_fronts_nsga + history_fronts_ip2 for obj in gen_front

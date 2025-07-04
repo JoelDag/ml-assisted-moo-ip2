@@ -36,8 +36,8 @@ def update_target_archive(P_t, T_prev, R):
             T_new[min_j] = P_t[i]
         
     # debug
-    repl = sum(id(a) != id(b) for a, b in zip(T_prev, T_new))
-    print(f"[Archive] replaced={repl} / {len(R)}")
+    #repl = sum(id(a) != id(b) for a, b in zip(T_prev, T_new))
+    #print(f"[Archive] replaced={repl} / {len(R)}")
     return T_new
 
 
