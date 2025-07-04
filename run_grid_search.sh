@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-LOGDIR="/runs/run_$TIMESTAMP"
+LOGDIR="runs/run_$TIMESTAMP"
 export RUN_OUTPUT_DIR="$LOGDIR"
 mkdir -p "$LOGDIR"
 LOGFILE="$LOGDIR/run_$TIMESTAMP.log"
@@ -12,7 +12,7 @@ NO_PARALLEL="" #bc default is parallel
 
 
 
-nohup python -m src.main \
+nohup setsid python -m src.main \
   --logdir "$LOGDIR" \
   --jobs "$JOBS" \
   --grid-search \
@@ -20,6 +20,7 @@ nohup python -m src.main \
 
 
 PID=$!
+disown "$PID"
 echo "Process started with PID: $PID"
 echo "Logging to: $LOGFILE"
 echo "To stop the process kill $PID"
