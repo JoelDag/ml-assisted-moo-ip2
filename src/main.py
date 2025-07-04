@@ -3,6 +3,7 @@ import subprocess
 import random
 import argparse
 import multiprocessing
+import json
 
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from src.IP2.evolutionaryComputation import evolutionaryRunner
@@ -26,7 +27,6 @@ def random_search_space(num_samples=20):
 search_space = random_search_space()
 
 def run_problem(args_tuple):
-    print(f"DEBUG: args_tuple = {args_tuple}")
     problem, t_past, t_freq, jutting_param, seed = args_tuple
     print(f"Running {problem} with t_past={t_past}, t_freq={t_freq}, jutting={jutting_param}, seed={seed}")
 
@@ -48,6 +48,17 @@ def run_problem(args_tuple):
                                 seed=seed)
 
     res = runner.run()
+
+    job_id = f"{problem}_tp{t_past}_tf{t_freq}_jut{jutting_param}_seed{seed}"
+    output_dir = os.environ.get("RUN_OUTPUT_DIR", "runs")
+    os.makedirs(output_dir, exist_ok=True)
+    result_path = os.path.join(output_dir, job_id + ".json")
+
+    with open(result_path, "w") as f:
+        json.dump(res, f, indent=2)
+
+    print(f"[run_problem] Saved result to {result_path}")
+
     return (problem, res)
 
 def parallelization(parallel, job_list, jobs):
@@ -110,17 +121,10 @@ if __name__ == "__main__":
         for seed in SEEDS
     ]
     
-    parser = argparse.ArgumentParser(
-        description="Starting Evolutionary Computation parallel or sequentially for multiple test problems.")
-    parser.add_argument(
-        "--no-parallel",
-        action="store_true",
-        help="Run problems sequentially")
-    parser.add_argument(
-        "--jobs", "-j",
-        type=int,
-        default=max(1, multiprocessing.cpu_count() - 1),
-        help="Number of worker processes (only relevant if parallel mode is active)")
+    parser = argparse.ArgumentParser(description="Starting Evolutionary Computation parallel or sequentially for multiple test problems.")
+    parser.add_argument("--no-parallel", action="store_true", help="Run problems sequentially")
+    parser.add_argument("--jobs", "-j", type=int, default=max(1, multiprocessing.cpu_count() - 1), help="num of worker processes (when parallel is active)")
+    parser.add_argument("--logdir", type=str, default=None, help="dir to save logs and results. Defaults to './runs/'")
     args = parser.parse_args()
 
     results = {}
