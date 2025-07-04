@@ -2,8 +2,9 @@
 
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 LOGDIR="runs/run_$TIMESTAMP"
-LOGFILE="$LOGDIR/run_$TIMESTAMP.log"
 mkdir -p "$LOGDIR"
+LOGFILE="$LOGDIR/run_$TIMESTAMP.log"
+
 
 JOBS=32
 NO_PARALLEL="" #bc default is parallel

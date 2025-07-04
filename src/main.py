@@ -113,13 +113,17 @@ if __name__ == "__main__":
         "makeSYMPARTrotatedFunction",
         "makeSYMPARTsimpleFunction"]
     test_problems = [
+        "makeMMF1Function",
+        "makeMMF3Function",
+        "makeMMF8Function",
+        "makeMMF11Function",
         "makeMMF14Function",
         "makeMMF14aFunction",
         "makeMMF15Function",
         "makeMMF15aFunction"]
-    test_problems = ["makeMMF8Function"]
+    #test_problems = ["makeMMF8Function"]
 
-    SEEDS = list(range(7))
+    SEEDS = list(range(3))
     search_space = grid_search_space()
     job_list = [
         (problem, t_past, t_freq, jutting, seed)
