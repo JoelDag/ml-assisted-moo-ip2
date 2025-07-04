@@ -89,6 +89,27 @@ def parallelization(parallel, job_list, jobs):
 
 if __name__ == "__main__":
     install_requirements()
+
+    parser = argparse.ArgumentParser(description="Starting Evolutionary Computation parallel or sequentially for multiple test problems.")
+    parser.add_argument("--no-parallel", action="store_true", help="Run problems sequentially")
+    parser.add_argument("--jobs", "-j", type=int, default=max(1, multiprocessing.cpu_count() - 1), help="num of worker processes (when parallel is active)")
+    parser.add_argument("--logdir", type=str, default=None, help="dir to save logs and results. Defaults to './runs/'")
+    parser.add_argument("--grid-search", action="store_true", help="Use grid search for hyperparameters")
+    parser.add_argument("--random-search", action="store_true", help="Use random search for hyperparameters")
+    args = parser.parse_args()
+
+    if args.grid_search:
+        search_space = grid_search_space()
+    elif args.random_search:
+        search_space = random_search_space()
+    else:
+        search_space = [(5, 5, 1.1)] #default values from paper (tpast, t_freq, jutting)
+
+    if args.grid_search or args.random_search:
+        SEEDS = list(range(3))
+    else:
+        SEEDS = [0]
+
     test_problems = [
         "makeMMF1Function",
         "makeMMF1eFunction",
@@ -123,20 +144,12 @@ if __name__ == "__main__":
         "makeMMF15aFunction"]
     #test_problems = ["makeMMF8Function"]
 
-    SEEDS = list(range(3))
-    search_space = grid_search_space()
     job_list = [
         (problem, t_past, t_freq, jutting, seed)
         for (t_past, t_freq, jutting) in search_space
         for problem in test_problems
         for seed in SEEDS
     ]
-    
-    parser = argparse.ArgumentParser(description="Starting Evolutionary Computation parallel or sequentially for multiple test problems.")
-    parser.add_argument("--no-parallel", action="store_true", help="Run problems sequentially")
-    parser.add_argument("--jobs", "-j", type=int, default=max(1, multiprocessing.cpu_count() - 1), help="num of worker processes (when parallel is active)")
-    parser.add_argument("--logdir", type=str, default=None, help="dir to save logs and results. Defaults to './runs/'")
-    args = parser.parse_args()
 
     results = {}
     results = parallelization(args.no_parallel, job_list, args.jobs)
