@@ -65,12 +65,14 @@ def load_reference_pf(problem_name: str, evaluator) -> np.ndarray:
     return pf
 
 def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem, algorithm='NSGA-II'):
+    os.makedirs("plots/hv", exist_ok=True)
+    os.makedirs("plots/igd", exist_ok=True)
     if not os.path.exists("plots_for_" + algorithm):
         os.makedirs("plots_for_" + algorithm, exist_ok=True)
         os.makedirs("plots_for_" + algorithm + "/hv", exist_ok=True)
         os.makedirs("plots_for_" + algorithm + "/igd", exist_ok=True)
 
-
+    safe_name = test_problem.replace("/", "_")
     plt.plot(hv_nsga2, label=algorithm)
     plt.plot(hv_ip2, label=algorithm +" + IP2")
     plt.xlabel("Generation")
@@ -78,7 +80,7 @@ def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem, algorithm='NSGA-II'
     plt.title(f"HV Performance on {test_problem}")
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"plots/hv/{test_problem}.png")
+    plt.savefig(f"plots/hv/{safe_name}.png")
     
     plt.figure()
     plt.plot(igd_nsga2, label=algorithm)
@@ -88,4 +90,4 @@ def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem, algorithm='NSGA-II'
     plt.title(f"IGD on {test_problem}")
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"plots/igd/{test_problem}.png")
+    plt.savefig(f"plots/igd/{safe_name}.png")
