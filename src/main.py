@@ -44,7 +44,7 @@ def run_problem(args_tuple):
     else:
         n_var, m_obj, pop_size = 2, 2, 100
     runner = evolutionaryRunner(pop_size=pop_size,
-                                n_gen=30,
+                                n_gen=100,
                                 n_var=n_var,
                                 m_obj=m_obj,
                                 t_past=t_past,
