@@ -3,3 +3,4 @@ src/__pycache__/main.cpython-312.pyc
 *.png
 .idea
 *.log
+src/runs

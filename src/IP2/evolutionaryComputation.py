@@ -1,13 +1,11 @@
 import numpy as np
 import random
+import copy
 
 from deap import tools
 from .integration import EvolutionaryAlgorithm
 from .utils import load_reference_pf, generate_reference_vectors, compute_hypervolume, compute_igd, plot, \
     get_three_objectives_problems, normalize_front
-
-
-
 
 
 class evolutionaryRunner:
@@ -55,9 +53,14 @@ class evolutionaryRunner:
         return [front_ip2, front_nsga2]
 
     def run_NSGA(self, hv_with_IP2, hv_without_IP2, igd_with_IP2, igd_without_IP2, A_t, T_t):
-        pop_ip2, pop_nsga2 = self.init_pop, self.init_pop
+        pop_ip2 = copy.deepcopy(self.init_pop)
+        pop_nsga2 = copy.deepcopy(self.init_pop)
+
         history_fronts_nsga = []
         history_fronts_ip2 = []
+        history_fronts_ip2.append([ind.fitness.values for ind in pop_ip2])
+        history_fronts_nsga.append([ind.fitness.values for ind in pop_nsga2])
+
         for t in range(self.n_gen):
             # NSGA-II
             pop_nsga2 = self.ea.NSGA_without_IP(pop_nsga2, self.n_var, self.ref_vectors)
@@ -74,8 +77,8 @@ class evolutionaryRunner:
             # hv_with_IP2.append(compute_hypervolume([ind.fitness.values for ind in front_ip2], self.ref_point))
             history_fronts_ip2.append([ind.fitness.values for ind in front_ip2])
 
-            igd_with_IP2.append(compute_igd(self.ref_pf, [ind.fitness.values for ind in front_nsga2]))
-            igd_without_IP2.append(compute_igd(self.ref_pf, [ind.fitness.values for ind in front_ip2]))
+            igd_without_IP2.append(compute_igd(self.ref_pf, [ind.fitness.values for ind in front_nsga2]))
+            igd_with_IP2.append(compute_igd(self.ref_pf, [ind.fitness.values for ind in front_ip2]))
             print(f"[{self.job_id}] Generation {t + 1}/{self.n_gen} complete.")
 
         all_points = np.array([

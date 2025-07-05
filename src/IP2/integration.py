@@ -1,3 +1,6 @@
+import os
+os.environ["R_LIBS_USER"] = "/local/joeldag/Rlibs"
+
 from functools import partial
 from rpy2 import robjects
 import numpy as np
@@ -50,12 +53,8 @@ class EvolutionaryAlgorithm:
         return ind,
 
     def bounded_sbx(self, ind1, ind2, eta, xl, xu, **kwargs):
-        for i in range(len(ind1)):
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter("always")
-                tools.cxSimulatedBinaryBounded(ind1, ind2, eta=eta, low=xl[i], up=xu[i])
-            return ind1, ind2
-
+        tools.cxSimulatedBinaryBounded(ind1, ind2, eta=eta, low=list(xl), up=list(xu))
+        return ind1, ind2
 
     def _setup_deap(self):
         # Erzeuge DEAP Typen
@@ -112,7 +111,7 @@ class EvolutionaryAlgorithm:
 
 
     def NSGA_without_IP(self, pop, n, R):
-        offspring = algorithms.varAnd(pop, self.toolbox, cxpb=0.9, mutpb=1.0 / n)
+        offspring = algorithms.varAnd(pop, self.toolbox, cxpb=0.9, mutpb=1.0 / n) #TODO: include this into grid/randomsearch
         for item in offspring:
             for j, i in enumerate(item):
                 if isinstance(i, list):

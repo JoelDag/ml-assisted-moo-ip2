@@ -4,11 +4,12 @@ import random
 import argparse
 import multiprocessing
 import json
+import traceback
 
 from itertools import product
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from src.IP2.evolutionaryComputation import evolutionaryRunner
-from src.IP2.utils import get_three_objectives_problems
+from src.IP2.utils import get_three_objectives_problems, setup_logger
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -17,8 +18,8 @@ def install_requirements():
     subprocess.run(["pip", "install", "-r", "requirements.txt"])
 
 def grid_search_space():
-    t_past_options = [2, 5, 10]
-    t_freq_options = [1, 5, 10]
+    t_past_options = [2, 5, 8, 10]
+    t_freq_options = [1, 5, 8, 10]      #TODO: add time analysis for setups, #TOOD: distinguish btw generations with /without using RandomForest
     jutting_options = [1.0, 1.1, 1.3]
     return list(product(t_past_options, t_freq_options, jutting_options))
 
@@ -37,7 +38,7 @@ def run_problem(args_tuple):
     print(f"Running {problem} with t_past={t_past}, t_freq={t_freq}, jutting={jutting_param}, seed={seed}")
 
     if problem in get_three_objectives_problems():
-        n_var, m_obj = 3, 3
+        n_var, m_obj, pop_size = 3, 3, 105
     elif problem == 'makeMMF13Function':
         n_var, m_obj = 3, 2
     else:
@@ -78,17 +79,20 @@ def parallelization(parallel, job_list, jobs):
                     results[key] = fut.result()
                 except Exception as e:
                     print(f"[main] Failed job {key}: {e}")
+                    traceback.print_exc()
     else:
         for job in job_list:
             try:
                 results[job] = run_problem(job)
             except Exception as e:
                 print(f"[main] Failed job {job}: {e}")
+                traceback.print_exc()
     print("[main] All computations finished.")
     return results
 
 if __name__ == "__main__":
     install_requirements()
+    setup_logger()
 
     parser = argparse.ArgumentParser(description="Starting Evolutionary Computation parallel or sequentially for multiple test problems.")
     parser.add_argument("--no-parallel", action="store_true", help="Run problems sequentially")
