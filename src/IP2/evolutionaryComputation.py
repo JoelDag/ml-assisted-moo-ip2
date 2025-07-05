@@ -74,8 +74,8 @@ class evolutionaryRunner:
             # hv_with_IP2.append(compute_hypervolume([ind.fitness.values for ind in front_ip2], self.ref_point))
             history_fronts_ip2.append([ind.fitness.values for ind in front_ip2])
 
-            igd_with_IP2.append(compute_igd(self.ref_pf, [ind.fitness.values for ind in front_nsga2]))
-            igd_without_IP2.append(compute_igd(self.ref_pf, [ind.fitness.values for ind in front_ip2]))
+            igd_with_IP2.append(compute_igd(self.ref_pf, [ind.fitness.values for ind in front_ip2]))
+            igd_without_IP2.append(compute_igd(self.ref_pf, [ind.fitness.values for ind in front_nsga2]))
             print(f"[{self.job_id}] Generation {t + 1}/{self.n_gen} complete.")
 
         all_points = np.array([
