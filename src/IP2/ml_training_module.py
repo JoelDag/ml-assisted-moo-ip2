@@ -50,34 +50,42 @@ def training(d_t, x_l, x_u):
 def progress(Q_t, n, x_min, x_max, x_l, x_u, predict):
     if predict is None:
         return Q_t
-    selected_offspring = random.sample(Q_t, len(Q_t) // 2)  # Randomly selected 50% of offspring
-    repaired_offspring = []
 
-    for initial_offspring in selected_offspring:
+    # Choose 50% of the offspring indices randomly
+    selected_indices = random.sample(range(len(Q_t)), len(Q_t) // 2)
+
+    for idx in selected_indices:
+        initial_offspring = Q_t[idx]
+
         # Normalize selected offspring using x_min and x_max
-        normalized_offspring = [(initial_offspring[i] - x_min[i]) / (x_max[i] - x_min[i]) for i in
-                                range(len(initial_offspring))]
+        normalized_offspring = [
+            (initial_offspring[i] - x_min[i]) / (x_max[i] - x_min[i])
+            for i in range(len(initial_offspring))
+        ]
 
         predicted_offspring = predict(normalized_offspring)  # Predict using the trained model
 
-        denormalized_predictions = [predicted_offspring[i] * (x_max[i] - x_min[i]) + x_min[i] for i in
-                                    range(len(predicted_offspring))]
+        denormalized_predictions = [
+            predicted_offspring[i] * (x_max[i] - x_min[i]) + x_min[i]
+            for i in range(len(predicted_offspring))
+        ]
 
         for k in range(len(denormalized_predictions)):
             tolerance = 0.01 * (x_u[k] - x_l[k])
             if initial_offspring[k] <= x_l[k] + tolerance or initial_offspring[k] >= x_u[k] - tolerance:
                 denormalized_predictions[k] = initial_offspring[k]
 
-
         jutted_offspring = np.array(initial_offspring) + n * (
-                np.array(denormalized_predictions) - np.array(initial_offspring))
+            np.array(denormalized_predictions) - np.array(initial_offspring)
+        )
 
-        repaired_offspring.append(creator.Individual(parabolic_repair(initial_offspring, jutted_offspring, x_l, x_u)))
+        repaired = parabolic_repair(initial_offspring, jutted_offspring, x_l, x_u)
+        repaired_clipped = np.clip(repaired, x_l, x_u)
 
-    # clip the repaired offspring to the bounds
-    repaired_offspring = [creator.Individual(ind) for ind in np.clip(repaired_offspring, x_l, x_u)]
+        # Replace the original offspring with the repaired one
+        Q_t[idx] = creator.Individual(repaired_clipped)
 
-    return repaired_offspring
+    return Q_t
 
 def parabolic_repair(initial_offspring, jutted_offspring, x_l, x_u, alpha=1.2):
     direction_vec = jutted_offspring - initial_offspring
