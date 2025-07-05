@@ -40,11 +40,11 @@ def run_problem(args_tuple):
     if problem in get_three_objectives_problems():
         n_var, m_obj, pop_size = 3, 3, 105
     elif problem == 'makeMMF13Function':
-        n_var, m_obj = 3, 2
+        n_var, m_obj, pop_size = 3, 2, 100
     else:
-        n_var, m_obj = 2, 2
-    runner = evolutionaryRunner(pop_size=100,
-                                n_gen=100,
+        n_var, m_obj, pop_size = 2, 2, 100
+    runner = evolutionaryRunner(pop_size=pop_size,
+                                n_gen=30,
                                 n_var=n_var,
                                 m_obj=m_obj,
                                 t_past=t_past,
@@ -146,7 +146,7 @@ if __name__ == "__main__":
         "makeMMF14aFunction",
         "makeMMF15Function",
         "makeMMF15aFunction"]
-    #test_problems = ["makeMMF8Function"]
+    test_problems = ["makeMMF15Function"]
 
     job_list = [
         (problem, t_past, t_freq, jutting, seed)
