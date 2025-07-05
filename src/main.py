@@ -146,7 +146,7 @@ if __name__ == "__main__":
         "makeMMF14aFunction",
         "makeMMF15Function",
         "makeMMF15aFunction"]
-    test_problems = ["makeMMF15Function"]
+    # test_problems = ["makeMMF8Function"]
 
     job_list = [
         (problem, t_past, t_freq, jutting, seed)
