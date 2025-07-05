@@ -50,11 +50,13 @@ class EvolutionaryAlgorithm:
         return ind,
 
     def bounded_sbx(self, ind1, ind2, eta, xl, xu, **kwargs):
-        for i in range(len(ind1)):
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter("always")
-                tools.cxSimulatedBinaryBounded(ind1, ind2, eta=eta, low=xl[i], up=xu[i])
-            return ind1, ind2
+        """Apply simulated binary crossover in a single call."""
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            # ``cxSimulatedBinaryBounded`` can operate on the complete
+            # individual when provided with sequences for ``low`` and ``up``.
+            tools.cxSimulatedBinaryBounded(ind1, ind2, eta=eta, low=xl, up=xu)
+        return ind1, ind2
 
 
     def _setup_deap(self):
