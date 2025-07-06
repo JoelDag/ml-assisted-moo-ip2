@@ -70,8 +70,9 @@ def load_reference_pf(problem_name: str, evaluator) -> np.ndarray:
     return pf
 
 def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem, algorithm='NSGA-II', job_id="default"):
-    os.makedirs("plots/hv", exist_ok=True)
-    os.makedirs("plots/igd", exist_ok=True)
+    root = Path(os.getenv("RUN_OUTPUT_DIR", "."))
+    (root / "plots/hv").mkdir(parents=True, exist_ok=True)
+    (root / "plots/igd").mkdir(parents=True, exist_ok=True)
     # if not os.path.exists("plots_for_" + algorithm):
     #     os.makedirs("plots_for_" + algorithm, exist_ok=True)
     #     os.makedirs("plots_for_" + algorithm + "/hv", exist_ok=True)
@@ -86,7 +87,8 @@ def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem, algorithm='NSGA-II'
     plt.title(f"HV Performance on {test_problem}")
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"plots/hv/{safe_name}_{job_id}.png")
+    plt.savefig(root/f"plots/hv/{safe_name}_{job_id}.png")
+    print(f"plot saved to {root}/plots/hv/{safe_name}_{job_id}.png")
     
     plt.figure()
     plt.plot(igd_nsga2, label=algorithm)
@@ -96,7 +98,8 @@ def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem, algorithm='NSGA-II'
     plt.title(f"IGD on {test_problem}")
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"plots/igd/{safe_name}_{job_id}.png")
+    plt.savefig(root/f"plots/igd/{safe_name}_{job_id}.png")
+    print(f"plot saved to {root}/plots/igd/{safe_name}_{job_id}.png")
 
 def setup_logger(level=None):
     lvl = level or getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper(), logging.INFO)

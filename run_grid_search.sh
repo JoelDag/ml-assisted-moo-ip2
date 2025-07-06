@@ -16,7 +16,7 @@ nohup setsid python -m src.main \
   --logdir "$LOGDIR" \
   --jobs "$JOBS" \
   --grid-search \
-  --wand \
+  --wandb \
   --parallel > "$LOGFILE" 2>&1 &
 
 

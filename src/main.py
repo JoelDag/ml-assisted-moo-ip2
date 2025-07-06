@@ -1,5 +1,4 @@
 import os
-import subprocess
 import random
 import argparse
 import multiprocessing
@@ -33,6 +32,7 @@ def random_search_space(num_samples=20):
 def run_problem(args_tuple):
     use_wandb = args_tuple[-1]
     if use_wandb:
+        wandb.init()
         config = wandb.config
         problem = config.problem
         t_past = config.t_past
@@ -59,8 +59,10 @@ def run_problem(args_tuple):
                                 jutting_param=jutting_param,
                                 h_interval=3,
                                 seed=seed)
+    project = os.getenv("WANDB_PROJECT")
+    entity = os.getenv("WANDB_ENTITY")
     if use_wandb:
-        run = wandb.init(project="ip2-gridsearch-presentation", job_type=problem, config=dict(problem=problem, t_past=t_past, t_freq=t_freq, jutting=jutting_param, seed=seed, pop_size=pop_size, n_gen=100))
+        run = wandb.init(project=project, entity=entity, job_type=problem, config=dict(problem=problem, t_past=t_past, t_freq=t_freq, jutting=jutting_param, seed=seed, pop_size=pop_size, n_gen=100))
     res = runner.run()
     if use_wandb:
         wandb.log({k: v for k, v in res.items() if "_final" in k})

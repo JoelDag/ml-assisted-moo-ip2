@@ -6,7 +6,7 @@ LOGDIR="runs/run_$TIMESTAMP"
 mkdir -p "$LOGDIR"
 export RUN_OUTPUT_DIR="$LOGDIR"
 
-SWEEP_ID="joeldag-paderborn-university/ml4moo_topic2/14bwiiyc"
+SWEEP_ID="joeldag-paderborn-university/ml4moo_topic2/s40cacq1"
 AGENTS=32
 CONDA_ENV_NAME="mlamoo"
 
@@ -16,7 +16,7 @@ for i in $(seq 1 $AGENTS); do
   LOGFILE="$LOGDIR/agent_${i}.log"
   echo "Starting agent $i logging to $LOGFILE"
 
-  nohup conda run -n $CONDA_ENV_NAME wandb agent $SWEEP_ID > "$LOGFILE" 2>&1 &
+  nohup conda run -n $CONDA_ENV_NAME --no-capture-output wandb agent $SWEEP_ID > "$LOGFILE" 2>&1 &
 
 done
 
