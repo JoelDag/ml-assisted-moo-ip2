@@ -6,7 +6,7 @@ LOGDIR="runs/run_$TIMESTAMP"
 mkdir -p "$LOGDIR"
 export RUN_OUTPUT_DIR="$LOGDIR"
 
-SWEEP_ID="joeldag-paderborn-university/ml4moo_topic2/s40cacq1"
+SWEEP_ID="joeldag-paderborn-university/ml4moo_topic2/j8bfpo6f"
 AGENTS=32
 CONDA_ENV_NAME="mlamoo"
 

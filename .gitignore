@@ -7,3 +7,6 @@ src/runs
 wandb
 runs
 filenames.txt
+data_analysis/aggregated_per_param
+data_analysis/plots
+data_analysis/paper_parameter_plots
