@@ -49,8 +49,18 @@ class evolutionaryRunner:
             hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, front_ip2, front_nsga2 = self.run_NSGA(hv_ip2, hv_nsga2, igd_ip2, igd_nsga2, A_t, T_t)
 
         plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, self.test_problem, algorithm=self.algorithm, job_id=self.job_id)
+        final = {
+            "hv_ip2_final": hv_ip2[-1] if hv_ip2 else None,
+            "hv_nsga2_final": hv_nsga2[-1] if hv_nsga2 else None,
+            "igd_ip2_final": igd_ip2[-1] if igd_ip2 else None,
+            "igd_nsga2_final": igd_nsga2[-1] if igd_nsga2 else None,
+            "hv_ip2": hv_ip2,
+            "hv_nsga2": hv_nsga2,
+            "igd_ip2": igd_ip2,
+            "igd_nsga2": igd_nsga2,
+        }
         print(f"[{self.job_id}] Finished plotting results.")
-        return [front_ip2, front_nsga2]
+        return final
 
     def run_NSGA(self, hv_with_IP2, hv_without_IP2, igd_with_IP2, igd_without_IP2, A_t, T_t):
         pop_ip2 = copy.deepcopy(self.init_pop)

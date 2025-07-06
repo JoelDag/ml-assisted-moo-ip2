@@ -1,0 +1,25 @@
+program: src.main
+method: grid
+name: ip2-gridsearch
+metric:
+  name: hv_ip2_final
+  goal: maximize
+parameters:
+  t_past:   {values: [2, 5, 8, 10]}
+  t_freq:   {values: [1, 5, 8, 10]}
+  jutting:  {values: [1.0, 1.1, 1.3]}
+  seed:     {values: [0, 1, 2]}
+  problem:  {values: [
+      makeMMF1Function, makeMMF1eFunction, makeMMF1zFunction, makeMMF2Function,
+      makeMMF3Function, makeMMF4Function, makeMMF5Function, makeMMF6Function,
+      makeMMF7Function, makeMMF8Function, makeMMF9Function, makeMMF10Function,
+      makeMMF11Function, makeMMF12Function, makeMMF13Function, makeMMF14Function,
+      makeMMF14aFunction, makeMMF15Function, makeMMF15aFunction,
+      makeOmniTestFunction, makeSYMPARTrotatedFunction, makeSYMPARTsimpleFunction
+  ]}
+command:
+  - ${env}
+  - python
+  - -m
+  - ${program}
+  - --wandb
