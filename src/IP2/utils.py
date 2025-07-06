@@ -1,12 +1,14 @@
 import os
 import itertools
-from pathlib import Path
-from scipy.spatial.distance import cdist
 import numpy as np
 import scipy.io as sio
-from deap import creator
 import matplotlib.pyplot as plt
 import pygmo as pg
+import logging
+
+from deap import creator
+from pathlib import Path
+from scipy.spatial.distance import cdist
 
 def get_three_objectives_problems():
     return ["makeMMF14Function", "makeMMF14aFunction", "makeMMF15Function", "makeMMF15aFunction"]
@@ -47,6 +49,9 @@ def compute_psp(true_ps_sets, approx_set, threshold=0.05):
 
 def compute_hypervolume(front, ref_point):
     hv = pg.hypervolume(front)
+    logging.debug("[HV DEBUG] Front shape: %s", front.shape)
+    logging.debug("[HV DEBUG] Sample front (first 2 points): %s", front[:2])
+    logging.debug("[HV DEBUG] Reference point: %s", ref_point)
     return hv.compute(ref_point)
 
 def load_reference_pf(problem_name: str, evaluator) -> np.ndarray:
@@ -67,12 +72,13 @@ def load_reference_pf(problem_name: str, evaluator) -> np.ndarray:
 def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem, algorithm='NSGA-II', job_id="default"):
     os.makedirs("plots/hv", exist_ok=True)
     os.makedirs("plots/igd", exist_ok=True)
-    if not os.path.exists("plots_for_" + algorithm):
-        os.makedirs("plots_for_" + algorithm, exist_ok=True)
-        os.makedirs("plots_for_" + algorithm + "/hv", exist_ok=True)
-        os.makedirs("plots_for_" + algorithm + "/igd", exist_ok=True)
+    # if not os.path.exists("plots_for_" + algorithm):
+    #     os.makedirs("plots_for_" + algorithm, exist_ok=True)
+    #     os.makedirs("plots_for_" + algorithm + "/hv", exist_ok=True)
+    #     os.makedirs("plots_for_" + algorithm + "/igd", exist_ok=True)
 
     safe_name = test_problem.replace("/", "_")
+    plt.figure()
     plt.plot(hv_nsga2, label=algorithm)
     plt.plot(hv_ip2, label=algorithm +" + IP2")
     plt.xlabel("Generation")
@@ -91,3 +97,7 @@ def plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, test_problem, algorithm='NSGA-II'
     plt.legend()
     plt.grid(True)
     plt.savefig(f"plots/igd/{safe_name}_{job_id}.png")
+
+def setup_logger(level=None):
+    lvl = level or getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper(), logging.INFO)
+    logging.basicConfig(level=lvl, format="LOG-%(levelname)s: %(message)s")

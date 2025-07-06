@@ -50,10 +50,11 @@ def training(d_t, x_l, x_u):
 def progress(Q_t, n, x_min, x_max, x_l, x_u, predict):
     if predict is None:
         return Q_t
-    selected_offspring = random.sample(Q_t, len(Q_t) // 2)  # Randomly selected 50% of offspring
+    indices = random.sample(range(len(Q_t)), len(Q_t) // 2)   # select 50% of offspring
     repaired_offspring = []
 
-    for initial_offspring in selected_offspring:
+    for idx in indices:
+        initial_offspring = Q_t[idx]
         # Normalize selected offspring using x_min and x_max
         normalized_offspring = [(initial_offspring[i] - x_min[i]) / (x_max[i] - x_min[i]) for i in
                                 range(len(initial_offspring))]
@@ -77,7 +78,10 @@ def progress(Q_t, n, x_min, x_max, x_l, x_u, predict):
     # clip the repaired offspring to the bounds
     repaired_offspring = [creator.Individual(ind) for ind in np.clip(repaired_offspring, x_l, x_u)]
 
-    return repaired_offspring
+    for i, idx in enumerate(indices):
+        Q_t[idx] = repaired_offspring[i]
+
+    return Q_t
 
 def parabolic_repair(initial_offspring, jutted_offspring, x_l, x_u, alpha=1.2):
     direction_vec = jutted_offspring - initial_offspring
