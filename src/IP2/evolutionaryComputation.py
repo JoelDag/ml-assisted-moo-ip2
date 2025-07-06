@@ -46,7 +46,9 @@ class evolutionaryRunner:
         print(f"[{self.job_id}] Starting evolutionary run...")
 
         if self.algorithm == 'NSGA2' or self.algorithm == 'NSGA3':
-            hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, front_ip2, front_nsga2 = self.run_NSGA(hv_ip2, hv_nsga2, igd_ip2, igd_nsga2, A_t, T_t)
+            hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, front_ip2, front_nsga2, history_fronts_ip2, history_fronts_nsga = self.run_NSGA(hv_ip2, hv_nsga2, igd_ip2, igd_nsga2, A_t, T_t)
+            history_fronts_ip2 = [[list(p) for p in gen] for gen in history_fronts_ip2]
+            history_fronts_nsga = [[list(p) for p in gen] for gen in history_fronts_nsga]
 
         plot(hv_nsga2, hv_ip2, igd_nsga2, igd_ip2, self.test_problem, algorithm=self.algorithm, job_id=self.job_id)
         final = {
@@ -58,6 +60,8 @@ class evolutionaryRunner:
             "hv_nsga2": hv_nsga2,
             "igd_ip2": igd_ip2,
             "igd_nsga2": igd_nsga2,
+            "fronts_ip2": history_fronts_ip2,
+            "fronts_nsga2": history_fronts_nsga
         }
         print(f"[{self.job_id}] Finished plotting results.")
         return final
@@ -107,4 +111,4 @@ class evolutionaryRunner:
             hv = compute_hypervolume(norm, self.ref_point)
             hv_with_IP2.append(hv)
 
-        return hv_with_IP2, hv_without_IP2, igd_with_IP2, igd_without_IP2, front_ip2, front_nsga2
+        return hv_with_IP2, hv_without_IP2, igd_with_IP2, igd_without_IP2, front_ip2, front_nsga2, history_fronts_ip2, history_fronts_nsga
