@@ -24,9 +24,9 @@ class evolutionaryRunner:
         self.ea = EvolutionaryAlgorithm(algo=algorithm, n=n_var, m=m_obj, test_problem=test_problem)
         self.ref_pf = load_reference_pf(self.test_problem, self.ea.problem.evaluate)
         if test_problem in get_three_objectives_problems():
-             self.ref_point = (111.1, 111.1, 111.1)  # For HV
+             self.ref_point = (1.1, 1.1, 1.1)  # For HV
         else:
-            self.ref_point = (111.1, 111.1)
+            self.ref_point = (1.1, 1.1)
         self.ref_vectors = generate_reference_vectors(self.m_obj, self.h_interval)
 
         if self.seed is not None:
