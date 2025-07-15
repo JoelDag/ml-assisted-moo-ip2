@@ -11,12 +11,12 @@ with open("/local/joeldag/ml4moo_topic2/src/runs/makeMMF10Function_tp5_tf5_jut1.
 fronts = data["fronts_ip2"]  # cahgne with fronts_nsga2 also
 
 
-mat_data = scipy.io.loadmat("/local/joeldag/ml4moo_topic2/Reference_PSPF_data/MMF1_Reference_PSPF_data.mat")
+mat_data = scipy.io.loadmat("/local/joeldag/ml4moo_topic2/Reference_PSPF_data/MMF10_Reference_PSPF_data.mat")
 print(mat_data.keys())
 ref_pf = mat_data["PF"]
 
 gen_idx = -1 #select last generation
-front = fronts[gen_idx]
+front = fronts[20]
 gen_num = gen_idx % len(fronts)
 
 x_vals = [obj[0] for obj in front]
@@ -31,5 +31,5 @@ plt.ylabel("Objective 2")
 plt.grid(True)
 plt.legend()
 plt.tight_layout()
-plt.savefig(f"pareto_vs_ref_gen{gen_num}.png")
+plt.savefig(f"makeMMF10_ip2_pareto_vs_ref_gen{gen_num}.png")
 plt.show()

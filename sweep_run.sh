@@ -1,12 +1,13 @@
 #!/bin/bash
 
 export WANDB_MODE=online
+export WANDB_PROJECT=mlamoo_random_search
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 LOGDIR="runs/run_$TIMESTAMP"
 mkdir -p "$LOGDIR"
 export RUN_OUTPUT_DIR="$LOGDIR"
 
-SWEEP_ID="joeldag-paderborn-university/ml4moo_topic2/j8bfpo6f"
+SWEEP_ID="joeldag-paderborn-university/mlamoo_random_search/3wl389su"
 AGENTS=32
 CONDA_ENV_NAME="mlamoo"
 

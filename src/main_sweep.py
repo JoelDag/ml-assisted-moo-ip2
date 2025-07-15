@@ -3,6 +3,7 @@ import argparse
 import multiprocessing
 import json
 import wandb
+import numpy as np
 
 from src.IP2.evolutionaryComputation import evolutionaryRunner
 from src.IP2.utils import get_three_objectives_problems, setup_logger
@@ -66,15 +67,39 @@ if __name__ == "__main__":
         )
         config = wandb.config
 
-        job = (
-            config.problem,
-            config.t_past,
-            config.t_freq,
-            config.jutting,
-            config.seed,
-            True,
+        #seeds = [0, 1, 2, 3, 4]
+        seeds = list(range(14))
+        all_results = []
+
+        for seed in seeds:
+            _, res = run_problem((
+                config.problem,
+                config.t_past,
+                config.t_freq,
+                config.jutting,
+                seed,
+                False
+            ))
+            all_results.append(res)
+
+        agg = {}
+        for key in all_results[0].keys():
+            if key.endswith("_final"):
+                vals = [r[key] for r in all_results]
+                agg[key.replace("_final", "_mean")] = float(np.mean(vals))
+                agg[key.replace("_final", "_std")] = float(np.std(vals))
+
+        wandb.log(agg)
+
+        output_dir = os.environ.get("RUN_OUTPUT_DIR", "runs")
+        os.makedirs(output_dir, exist_ok=True)
+        agg_path = os.path.join(
+            output_dir,
+            f"{config.problem}_tp{config.t_past}_tf{config.t_freq}"
+            f"_jut{config.jutting}_agg.json"
         )
-        run_problem(job)
+        with open(agg_path, "w") as f:
+            json.dump(agg, f, indent=2)
         wandb.finish()
     else:
         # Optional: test one job manually

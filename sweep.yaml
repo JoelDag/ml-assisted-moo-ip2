@@ -1,14 +1,13 @@
-program: src.main
-method: grid
+program: src.main_sweep
+method: random
 name: ip2-gridsearch
 metric:
   name: hv_ip2_final
   goal: maximize
 parameters:
-  t_past:   {values: [2, 5, 8, 10]}
-  t_freq:   {values: [1, 5, 8, 10]}
-  jutting:  {values: [1.0, 1.1, 1.3]}
-  seed:     {values: [0, 1, 2]}
+  t_past:   {values: [2, 5, 8, 10, 20, 50]}
+  t_freq:   {values: [1, 5, 8, 10, 20, 50]}
+  jutting:  {values: [0.8, 1.1, 1.5, 2.0, 3, ]}
   problem:  {values: [
       makeMMF1Function, makeMMF1eFunction, makeMMF1zFunction, makeMMF2Function,
       makeMMF3Function, makeMMF4Function, makeMMF5Function, makeMMF6Function,
