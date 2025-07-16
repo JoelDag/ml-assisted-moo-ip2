@@ -10,8 +10,14 @@ from src.IP2.utils import get_three_objectives_problems, setup_logger
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+def parse_or_default(value, default):
+    return None if value == "None" or value is None else value
+
+def clean_val(val):
+    return str(val) if val is not None else "NA"
+
 def run_problem(args_tuple):
-    problem, t_past, t_freq, jutting_param, seed, use_wandb = args_tuple
+    problem, t_past, t_freq, jutting_param, seed, use_wandb, rf_params = args_tuple
     print(f"Running {problem} with t_past={t_past}, t_freq={t_freq}, jutting={jutting_param}, seed={seed}")
 
     if problem in get_three_objectives_problems():
@@ -30,14 +36,19 @@ def run_problem(args_tuple):
                                 test_problem=problem,
                                 jutting_param=jutting_param,
                                 h_interval=3,
-                                seed=seed)
+                                seed=seed,
+                                rf_params=rf_params)
     res = runner.run()
 
     if use_wandb:
         wandb.log({k: v for k, v in res.items() if "_final" in k})
         wandb.run.summary.update({k: v for k, v in res.items() if "_final" in k})
 
-    job_id = f"{problem}_tp{t_past}_tf{t_freq}_jut{jutting_param}_seed{seed}"
+    job_id = (
+        f"{problem}_tp{t_past}_tf{t_freq}_jut{jutting_param}_seed{seed}"
+        f"_nest{clean_val(rf_params.get('n_estimators'))}"
+        f"_mdepth{clean_val(rf_params.get('max_depth'))}"
+    )
     output_dir = os.environ.get("RUN_OUTPUT_DIR", "runs")
     os.makedirs(output_dir, exist_ok=True)
     result_path = os.path.join(output_dir, job_id + ".json")
@@ -66,6 +77,11 @@ if __name__ == "__main__":
             job_type="sweep_run",
         )
         config = wandb.config
+        
+        rf_params = {
+            "n_estimators": parse_or_default(config.n_estimators, None),
+            "max_depth": parse_or_default(config.max_depth, None),
+        }
 
         #seeds = [0, 1, 2, 3, 4]
         seeds = list(range(14))
@@ -78,7 +94,8 @@ if __name__ == "__main__":
                 config.t_freq,
                 config.jutting,
                 seed,
-                False
+                False,
+                rf_params
             ))
             all_results.append(res)
 
@@ -95,8 +112,8 @@ if __name__ == "__main__":
         os.makedirs(output_dir, exist_ok=True)
         agg_path = os.path.join(
             output_dir,
-            f"{config.problem}_tp{config.t_past}_tf{config.t_freq}"
-            f"_jut{config.jutting}_agg.json"
+            f"{config.problem}_tp{config.t_past}_tf{config.t_freq}_jut{config.jutting}"
+            f"_nest{clean_val(config.n_estimators)}_mdepth{clean_val(config.max_depth)}_agg.json"
         )
         with open(agg_path, "w") as f:
             json.dump(agg, f, indent=2)

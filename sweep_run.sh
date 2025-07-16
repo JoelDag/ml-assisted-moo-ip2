@@ -7,7 +7,8 @@ LOGDIR="runs/run_$TIMESTAMP"
 mkdir -p "$LOGDIR"
 export RUN_OUTPUT_DIR="$LOGDIR"
 
-SWEEP_ID="joeldag-paderborn-university/mlamoo_random_search/3wl389su"
+export WANDB_PROJECT=mlamoo_final_random_search
+SWEEP_ID="joeldag-paderborn-university/mlamoo_final_random_search/xluh1squ"
 AGENTS=32
 CONDA_ENV_NAME="mlamoo"
 

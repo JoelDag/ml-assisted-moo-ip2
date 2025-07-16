@@ -75,13 +75,13 @@ class EvolutionaryAlgorithm:
 
         self.toolbox.register("evaluate", self.eval_pymoo)
 
-    def NSGA(self, R, P_t, A_t, T_t1, t_past, t_freq, t, n, jutting_param):
+    def NSGA(self, R, P_t, A_t, T_t1, t_past, t_freq, t, n, jutting_param, rf_params=None):
         self.history_P.append(P_t)
         T_t = update_target_archive(P_t, T_t1, R)
         count = t % t_freq
         if count == 0:
             D_t = archive_mapping(A_t, T_t, R)
-            predict, x_min, x_max = training(D_t, self.problem.xl, self.problem.xu)
+            predict, x_min, x_max = training(D_t, self.problem.xl, self.problem.xu, rf_params=rf_params)
         Q_t = algorithms.varAnd(P_t, self.toolbox, cxpb=0.9, mutpb=1.0 / n)
         for item in Q_t:
             for j, i in enumerate(item):

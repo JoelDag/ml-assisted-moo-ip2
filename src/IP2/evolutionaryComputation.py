@@ -9,7 +9,7 @@ from .utils import load_reference_pf, generate_reference_vectors, compute_hyperv
 
 
 class evolutionaryRunner:
-    def __init__(self, pop_size, n_gen, n_var, m_obj, t_past, t_freq, test_problem, jutting_param, h_interval, algorithm='NSGA2', seed=None):
+    def __init__(self, pop_size, n_gen, n_var, m_obj, t_past, t_freq, test_problem, jutting_param, h_interval, algorithm='NSGA2', seed=None, rf_params=None):
         self.pop_size = pop_size
         self.n_gen = n_gen
         self.n_var = n_var
@@ -23,6 +23,7 @@ class evolutionaryRunner:
         self.seed = seed
         self.ea = EvolutionaryAlgorithm(algo=algorithm, n=n_var, m=m_obj, test_problem=test_problem)
         self.ref_pf = load_reference_pf(self.test_problem, self.ea.problem.evaluate)
+        self.rf_params = rf_params or {}
         if test_problem in get_three_objectives_problems():
              self.ref_point = (111.1, 111.1, 111.1)  # For HV
         else:
@@ -86,7 +87,7 @@ class evolutionaryRunner:
             pop_ip2, A_t, T_t = self.ea.NSGA(self.ref_vectors,
                                         pop_ip2, A_t, T_t,
                                         self.t_past,
-                                        self.t_freq, t, self.n_var, self.jutting_param)
+                                        self.t_freq, t, self.n_var, self.jutting_param, rf_params=self.rf_params)
             front_ip2 = tools.sortNondominated(pop_ip2, self.pop_size, True)[0]
             # hv_with_IP2.append(compute_hypervolume([ind.fitness.values for ind in front_ip2], self.ref_point))
             history_fronts_ip2.append([ind.fitness.values for ind in front_ip2])

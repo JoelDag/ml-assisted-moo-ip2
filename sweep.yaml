@@ -6,8 +6,10 @@ metric:
   goal: maximize
 parameters:
   t_past:   {values: [2, 5, 8, 10, 20, 50]}
-  t_freq:   {values: [1, 5, 8, 10, 20, 50]}
-  jutting:  {values: [0.8, 1.1, 1.5, 2.0, 3, ]}
+  t_freq:   {values: [1, 5, 8, 10, 20]}
+  jutting:  {values: [0.8, 1.1, 1.5, 2.0]}
+  n_estimators: {values: [10, 50, 100, 200, None]}
+  max_depth: {values: [5, 10, 30, None]}
   problem:  {values: [
       makeMMF1Function, makeMMF1eFunction, makeMMF1zFunction, makeMMF2Function,
       makeMMF3Function, makeMMF4Function, makeMMF5Function, makeMMF6Function,
