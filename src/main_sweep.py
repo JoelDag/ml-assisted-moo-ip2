@@ -120,5 +120,5 @@ if __name__ == "__main__":
         wandb.finish()
     else:
         # Optional: test one job manually
-        job = ("makeMMF1Function", 5, 8, 1.1, 0, False)
+        job = ("makeMMF1Function", 5, 8, 1.1, 0, False, {})
         run_problem(job)
