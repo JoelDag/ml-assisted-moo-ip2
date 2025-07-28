@@ -3,11 +3,22 @@ import random
 import numpy as np
 from deap import creator
 
-def training(d_t, x_l, x_u):
+def training(d_t, x_l, x_u, rf_params=None):
     if len(d_t) == 0:
         return None, None, None
     input_vec, target_vec = zip(*d_t)
     n_samples, n_features = np.array(input_vec).shape
+    
+    if rf_params is None:
+        rf_params = {}
+    if rf_params.get("n_estimators") is None:
+        rf_params["n_estimators"] = n_samples
+    rf_params.setdefault("max_depth", None)
+    rf_params.setdefault("max_features", n_features)
+    rf_params.setdefault("criterion", "squared_error")
+    rf_params.setdefault("random_state", 42)
+
+    print(f"[RF-TRAINING] Creating RandomForestRegressor with params: {rf_params}")
 
     input_vec = np.array(input_vec)
     target_vec = np.array(target_vec)
@@ -27,12 +38,10 @@ def training(d_t, x_l, x_u):
         [[(d[i] - x_min[i]) / (x_max[i] - x_min[i]) for i in range(n_features)] for d in input_vec])
     target_vec_normalized = np.array(
         [[(d[i] - x_min[i]) / (x_max[i] - x_min[i]) for i in range(n_features)] for d in target_vec])
-
+            
     models = []
     for i in range(n_features):
-        model = RandomForestRegressor(n_estimators=n_samples,
-                                      max_features=n_features,
-                                      criterion="squared_error")
+        model = RandomForestRegressor(**rf_params)
         try:
             model.fit(input_vec_normalized, target_vec_normalized[:, i])
 

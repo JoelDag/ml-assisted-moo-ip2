@@ -4,3 +4,9 @@ src/__pycache__/main.cpython-312.pyc
 .idea
 *.log
 src/runs
+wandb
+runs
+filenames.txt
+data_analysis/aggregated_per_param
+data_analysis/plots
+data_analysis/paper_parameter_plots
