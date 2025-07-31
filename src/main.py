@@ -29,7 +29,7 @@ def random_search_space(num_samples=20):
         for _ in range(num_samples)
     ]
 
-def run_problem(args_tuple):
+def run_problem(args_tuple, model_performance):
     use_wandb = args_tuple[-1]
     if use_wandb:
         wandb.init()
@@ -58,7 +58,8 @@ def run_problem(args_tuple):
                                 test_problem=problem,
                                 jutting_param=jutting_param,
                                 h_interval=3,
-                                seed=seed)
+                                seed=seed,
+                                model_performance=model_performance)
     project = os.getenv("WANDB_PROJECT")
     entity = os.getenv("WANDB_ENTITY")
     if use_wandb:
@@ -81,11 +82,11 @@ def run_problem(args_tuple):
 
     return (problem, res)
 
-def parallelization(parallel, job_list, jobs):
+def parallelization(parallel, job_list, jobs, model_performance):
     results: dict = {}
     if parallel:
         with ProcessPoolExecutor(max_workers=jobs) as pool:
-            futures = {pool.submit(run_problem, job): job for job in job_list}
+            futures = {pool.submit(run_problem, job, model_performance): job for job in job_list}
             for fut in as_completed(futures):
                 key = futures[fut]
                 try:
@@ -96,7 +97,7 @@ def parallelization(parallel, job_list, jobs):
     else:
         for job in job_list:
             try:
-                results[job] = run_problem(job)
+                results[job] = run_problem(job, model_performance)
             except Exception as e:
                 print(f"[main] Failed job {job}: {e}")
                 traceback.print_exc()
@@ -113,6 +114,8 @@ if __name__ == "__main__":
     parser.add_argument("--grid-search", action="store_true", help="Use grid search for hyperparameters")
     parser.add_argument("--random-search", action="store_true", help="Use random search for hyperparameters")
     parser.add_argument("--wandb", action="store_true", help = "If set, log every run to Weights & Biases")
+    parser.add_argument("--model-performance", action="store_true", help="If set, evaluate the model performance after training")
+
     args = parser.parse_args()
 
     if args.grid_search:
@@ -169,7 +172,7 @@ if __name__ == "__main__":
     ]
 
     results = {}
-    results = parallelization(args.parallel, job_list, args.jobs)
+    results = parallelization(args.parallel, job_list, args.jobs, args.model_performance)
 
     for prob, res in results.items():
         print(f"[main] Results for {prob}: {res}")
