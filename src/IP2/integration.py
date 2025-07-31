@@ -1,6 +1,4 @@
 import os
-os.environ["R_LIBS_USER"] = "/local/joeldag/Rlibs"
-
 from functools import partial
 from rpy2 import robjects
 import numpy as np

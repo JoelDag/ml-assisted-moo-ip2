@@ -14,6 +14,7 @@ def initialise_target_archive(P_t, R):
     return T_t
 
 def update_target_archive(P_t, T_prev, R):
+    """ Updates the target archive by replacing targets with better parent solutions if found """
     if T_prev is None or len(T_prev) == 0:
         # First generation → create targets directly from current parents
         return initialise_target_archive(P_t, R)
@@ -34,14 +35,11 @@ def update_target_archive(P_t, T_prev, R):
         min_j = int(np.argmin(vals))
         if vals[min_j] < asf(F_T_norm[min_j], R[min_j]):   # is parent better for that RV?
             T_new[min_j] = P_t[i]
-        
-    # debug
-    #repl = sum(id(a) != id(b) for a, b in zip(T_prev, T_new))
-    #print(f"[Archive] replaced={repl} / {len(R)}")
     return T_new
 
 
 def archive_mapping(A_t, T_t, R):
+    """ Maps each archive member to its closest target based on reference vectors """
     if len(A_t) == 0 or len(T_t) == 0:
         return []
 
